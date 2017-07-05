@@ -59,7 +59,7 @@ SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-HAL_SD_CardInfoTypeDef SDCardInfo;
+HAL_SD_CardInfoTypedef SDCardInfo;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,16 +101,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SDIO_SD_Init(); 
-	
-	/* USER CODE BEGIN 2 */
-	HAL_SD_GetCardInfo(&hsd, &SDCardInfo);
-	// We need get information of the SD card before device initialization
-  /* USER CODE END 2 */
-	
+  MX_SDIO_SD_Init();
   MX_USB_DEVICE_Init();
 
- 
+  /* USER CODE BEGIN 2 */
+	HAL_SD_Get_CardInfo(&hsd, &SDCardInfo);
+	// We need get information of the SD card before device initialization
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -204,12 +201,12 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd.Init.ClockDiv = 0;
-  if (HAL_SD_Init(&hsd) != HAL_OK)
+  if (HAL_SD_Init(&hsd, &SDCardInfo) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  HAL_SD_ConfigWideBusOperation(&hsd, SDIO_BUS_WIDE_4B);
+  HAL_SD_WideBusOperation_Config(&hsd, SDIO_BUS_WIDE_4B);
 
 }
 

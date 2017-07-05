@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=D:/Double_Bottom_USB_Stick/Inc
+HeaderPath=D:/Projects/GSoC_2017/Portland_State_University/Double_Bottom_USB_Stick/Inc
 HeaderFiles=ffconf.h;bsp_driver_sd.h;fatfs.h;user_diskio.h;FreeRTOSConfig.h;usb_device.h;usbd_conf.h;usbd_desc.h;usbd_storage_if.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=D:/Double_Bottom_USB_Stick/Src
+SourcePath=D:/Projects/GSoC_2017/Portland_State_University/Double_Bottom_USB_Stick/Src
 SourceFiles=ffconf.h;bsp_driver_sd.h;fatfs.h;user_diskio.h;FreeRTOSConfig.h;usb_device.h;usbd_conf.h;usbd_desc.h;usbd_storage_if.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;bsp_driver_sd.c;fatfs.c;user_diskio.c;freertos.c;usb_device.c;usbd_conf.c;usbd_desc.c;usbd_storage_if.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_TIM.c;main.c;
 
 [PreviousLibFiles]

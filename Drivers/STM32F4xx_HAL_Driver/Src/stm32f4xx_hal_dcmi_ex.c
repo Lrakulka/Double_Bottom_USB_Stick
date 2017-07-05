@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32f4xx_hal_dcmi_ex.c
   * @author  MCD Application Team
-  * @version V1.7.1
-  * @date    14-April-2017
+  * @version V1.5.0
+  * @date    06-May-2016
   * @brief   DCMI Extension HAL module driver
   *          This file provides firmware functions to manage the following
   *          functionalities of DCMI extension peripheral:
@@ -27,7 +27,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -80,11 +80,18 @@
   * @{
   */
 
-/**
-  * @}
-  */
+/** @defgroup DCMIEx_Exported_Functions_Group1 Initialization and Configuration functions
+ *  @brief   Initialization and Configuration functions
+ *
+@verbatim   
+ ===============================================================================
+                ##### Initialization and Configuration functions #####
+ ===============================================================================
+    [..]  This section provides functions allowing to:
+      (+) Initialize and configure the DCMI
+      (+) De-initialize the DCMI
 
-/** @addtogroup DCMI_Exported_Functions_Group1 Initialization and Configuration functions
+@endverbatim
   * @{
   */
 
@@ -165,6 +172,15 @@ HAL_StatusTypeDef HAL_DCMI_Init(DCMI_HandleTypeDef *hdcmi)
 
   return HAL_OK;
 }
+
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
   
 /**
   * @}

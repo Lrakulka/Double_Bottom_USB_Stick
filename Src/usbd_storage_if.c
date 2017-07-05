@@ -109,16 +109,16 @@ const int8_t  STORAGE_Inquirydata_FS[] = {/* 36 */
   0x00,
   0x00,	
   0x00,
-  'S', 'T', 'M', ' ', ' ', ' ', ' ', ' ', /* Manufacturer : 8 bytes */
-  'P', 'r', 'o', 'd', 'u', 'c', 't', ' ', /* Product      : 16 Bytes */
-  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+  'D', 'o', 'u', 'b', 'l', 'e', ' ', ' ', /* Manufacturer : 8 bytes */
+  'B', 'o', 't', 't', 'o', 'm', ' ', ' ', /* Product      : 16 Bytes */
+  'S', 't', 'i', 'c', 'k', ' ', ' ', ' ',
   '0', '.', '0' ,'1',                     /* Version      : 4 Bytes */
 }; 
 /* USER CODE END INQUIRY_DATA_FS */ 
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 extern SD_HandleTypeDef hsd;
-extern HAL_SD_CardInfoTypeDef SDCardInfo;
+extern HAL_SD_CardInfoTypedef SDCardInfo;
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -199,8 +199,8 @@ int8_t STORAGE_Init_FS (uint8_t lun)
 int8_t STORAGE_GetCapacity_FS (uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
   /* USER CODE BEGIN 3 */   
-  *block_num = SDCardInfo.BlockNbr; 
-	*block_size = SDCardInfo.BlockSize;
+  *block_num = SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize; 
+	*block_size = SDCardInfo.CardBlockSize;
   return (USBD_OK);
   /* USER CODE END 3 */ 
 }
@@ -246,9 +246,9 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
-	int readBlockNumber = 1;
-	HAL_StatusTypeDef res = HAL_SD_ReadBlocks(&hsd, buf, blk_addr, readBlockNumber, blk_len); 	
-  return (USBD_OK);
+	HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks(&hsd, (uint32_t*)buf, (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), 
+		SDCardInfo.CardBlockSize, blk_len);
+  return res;//(USBD_OK);
   /* USER CODE END 6 */ 
 }
 
@@ -265,9 +265,9 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
-	int writeBlockNumber = 1;
-	HAL_StatusTypeDef res = HAL_SD_WriteBlocks(&hsd, buf, blk_addr, writeBlockNumber, blk_len);
-  return (USBD_OK);
+	HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks(&hsd, (uint32_t*)buf, (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), 
+		SDCardInfo.CardBlockSize, blk_len);
+	return res;//(USBD_OK);
   /* USER CODE END 7 */ 
 }
 
