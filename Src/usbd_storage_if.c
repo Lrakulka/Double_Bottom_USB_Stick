@@ -251,9 +251,9 @@ int8_t STORAGE_Read_FS (uint8_t lun,
 			return (USBD_OK);
 		}
 	}
-  return (USBD_FAIL);*/
+  return (USBD_FAIL);
 	HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks(&hsd, (uint32_t*)buf, 
-	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
+	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);*/
 	return (USBD_OK);
   /* USER CODE END 6 */ 
 }
@@ -279,9 +279,9 @@ int8_t STORAGE_Write_FS (uint8_t lun,
 			return (USBD_OK);
 		}
 	}
-  return (USBD_FAIL);*/
+  return (USBD_FAIL);
 	HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks(&hsd, (uint32_t*)buf, 
-	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
+	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);*/
 	return (USBD_OK);
   /* USER CODE END 7 */ 
 }

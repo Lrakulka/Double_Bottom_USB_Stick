@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
-  * File Name          : main.h
-  * Description        : This file contains the common defines of the application
+  * @file   fatfs.h
+  * @brief  Header for fatfs applications
   ******************************************************************************
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
@@ -40,28 +40,33 @@
   *
   ******************************************************************************
   */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
-  /* Includes ------------------------------------------------------------------*/
+#ifndef __fatfs_H
+#define __fatfs_H
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+#include "ff.h"
+#include "ff_gen_drv.h"
+#include "sd_diskio.h" /* defines SD_Driver as external */
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
+extern uint8_t retSD; /* Return value for SD */
+extern char SD_Path[4]; /* SD logical drive path */
 
-/* USER CODE BEGIN Private defines */
+void MX_FATFS_Init(void);
 
-/* USER CODE END Private defines */
+/* USER CODE BEGIN Prototypes */
 
-/**
-  * @}
-  */ 
+/* USER CODE END Prototypes */
+#ifdef __cplusplus
+}
+#endif
+#endif /*__fatfs_H */
 
-/**
-  * @}
-*/ 
-
-#endif /* __MAIN_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

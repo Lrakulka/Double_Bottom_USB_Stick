@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
-  * File Name          : main.h
-  * Description        : This file contains the common defines of the application
+  * File Name          : freertos.c
+  * Description        : Code for freertos applications
   ******************************************************************************
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
@@ -40,28 +40,31 @@
   *
   ******************************************************************************
   */
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
-  /* Includes ------------------------------------------------------------------*/
 
-/* USER CODE BEGIN Includes */
+/* Includes ------------------------------------------------------------------*/
+#include "FreeRTOS.h"
+#include "task.h"
+
+/* USER CODE BEGIN Includes */     
 
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
+/* Variables -----------------------------------------------------------------*/
 
-/* USER CODE BEGIN Private defines */
+/* USER CODE BEGIN Variables */
 
-/* USER CODE END Private defines */
+/* USER CODE END Variables */
 
-/**
-  * @}
-  */ 
+/* Function prototypes -------------------------------------------------------*/
 
-/**
-  * @}
-*/ 
+/* USER CODE BEGIN FunctionPrototypes */
 
-#endif /* __MAIN_H */
+/* USER CODE END FunctionPrototypes */
+
+/* Hook prototypes */
+
+/* USER CODE BEGIN Application */
+     
+/* USER CODE END Application */
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
