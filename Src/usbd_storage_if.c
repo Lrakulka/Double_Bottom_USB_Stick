@@ -3,11 +3,6 @@
   * @file           : usbd_storage_if.c
   * @brief          : Memory management layer
   ******************************************************************************
-  * This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
   * All rights reserved.
@@ -77,6 +72,7 @@
 #define STORAGE_BLK_SIZ                  0x200
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
+#define STORAGE_TIME_OUT                 0x2710
 /* USER CODE END PRIVATE_DEFINES */
   
 /**
@@ -119,6 +115,7 @@ const int8_t  STORAGE_Inquirydata_FS[] = {/* 36 */
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 extern SD_HandleTypeDef hsd;
 extern HAL_SD_CardInfoTypedef SDCardInfo;
+extern uint32_t numberOfBlocks;
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -246,9 +243,18 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
-	HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks(&hsd, (uint32_t*)buf, (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), 
-		SDCardInfo.CardBlockSize, blk_len);
-  return res;//(USBD_OK);
+	/*HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks_DMA(&hsd, (uint32_t*)buf, 
+      (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
+	if (res == SD_OK) {
+		res = HAL_SD_CheckReadOperation(&hsd, STORAGE_TIME_OUT);
+		if (res == SD_OK) {
+			return (USBD_OK);
+		}
+	}
+  return (USBD_FAIL);*/
+	HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks(&hsd, (uint32_t*)buf, 
+	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
+	return (USBD_OK);
   /* USER CODE END 6 */ 
 }
 
@@ -265,9 +271,18 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
-	HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks(&hsd, (uint32_t*)buf, (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), 
-		SDCardInfo.CardBlockSize, blk_len);
-	return res;//(USBD_OK);
+	/*HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks_DMA(&hsd, (uint32_t*)buf, 
+	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
+	if (res != SD_OK) {
+		res = HAL_SD_CheckWriteOperation(&hsd, STORAGE_TIME_OUT);
+		if (res != SD_OK) {
+			return (USBD_OK);
+		}
+	}
+  return (USBD_FAIL);*/
+	HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks(&hsd, (uint32_t*)buf, 
+	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
+	return (USBD_OK);
   /* USER CODE END 7 */ 
 }
 
