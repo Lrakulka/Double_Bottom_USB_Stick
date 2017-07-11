@@ -44,6 +44,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_storage_if.h"
 /* USER CODE BEGIN INCLUDE */
+#include "ff_gen_drv.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -113,7 +114,6 @@ const int8_t  STORAGE_Inquirydata_FS[] = {/* 36 */
 /* USER CODE END INQUIRY_DATA_FS */ 
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-extern SD_HandleTypeDef hsd;
 extern HAL_SD_CardInfoTypedef SDCardInfo;
 extern uint32_t numberOfBlocks;
 /* USER CODE END PRIVATE_VARIABLES */
@@ -243,18 +243,14 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
-	/*HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks_DMA(&hsd, (uint32_t*)buf, 
-      (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
-	if (res == SD_OK) {
-		res = HAL_SD_CheckReadOperation(&hsd, STORAGE_TIME_OUT);
-		if (res == SD_OK) {
-			return (USBD_OK);
-		}
-	}
-  return (USBD_FAIL);*/
-	HAL_SD_ErrorTypedef res = HAL_SD_ReadBlocks(&hsd, (uint32_t*)buf, 
-	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
-	return (USBD_OK);
+	if(BSP_SD_ReadBlocks_DMA((uint32_t*)buf, 
+                       (uint64_t) (blk_addr * SDCardInfo.CardBlockSize), 
+                       SDCardInfo.CardBlockSize, 
+                       blk_len) != MSD_OK)
+  {
+		return (USBD_FAIL);
+  }
+  return (USBD_OK);
   /* USER CODE END 6 */ 
 }
 
@@ -271,18 +267,13 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
-	/*HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks_DMA(&hsd, (uint32_t*)buf, 
-	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
-	if (res != SD_OK) {
-		res = HAL_SD_CheckWriteOperation(&hsd, STORAGE_TIME_OUT);
-		if (res != SD_OK) {
-			return (USBD_OK);
-		}
-	}
-  return (USBD_FAIL);*/
-	HAL_SD_ErrorTypedef res = HAL_SD_WriteBlocks(&hsd, (uint32_t*)buf, 
-	    (uint64_t)(blk_addr * SDCardInfo.CardBlockSize), STORAGE_BLK_SIZ, numberOfBlocks);
-	return (USBD_OK);
+	if(BSP_SD_WriteBlocks_DMA((uint32_t*)buf, 
+                       (uint64_t) (blk_addr * SDCardInfo.CardBlockSize), 
+                       SDCardInfo.CardBlockSize, 
+                       blk_len) != MSD_OK)
+  {
+		return (USBD_FAIL);
+  }
   /* USER CODE END 7 */ 
 }
 
