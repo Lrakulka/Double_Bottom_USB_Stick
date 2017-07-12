@@ -274,6 +274,7 @@ int8_t STORAGE_Write_FS (uint8_t lun,
   {
 		return (USBD_FAIL);
   }
+	return (USBD_OK);
   /* USER CODE END 7 */ 
 }
 
