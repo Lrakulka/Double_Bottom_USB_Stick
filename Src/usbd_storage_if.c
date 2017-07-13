@@ -44,7 +44,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_storage_if.h"
 /* USER CODE BEGIN INCLUDE */
-#include "ff_gen_drv.h"
+#include "sd_io.h" /* defines SD_Driver as external */
+#include "diskio.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -73,7 +74,6 @@
 #define STORAGE_BLK_SIZ                  0x200
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
-#define STORAGE_TIME_OUT                 0x2710
 /* USER CODE END PRIVATE_DEFINES */
   
 /**
@@ -243,10 +243,7 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
-	if(BSP_SD_ReadBlocks_DMA((uint32_t*)buf, 
-                       (uint64_t) (blk_addr * SDCardInfo.CardBlockSize), 
-                       SDCardInfo.CardBlockSize, 
-                       blk_len) != MSD_OK)
+	if(SD_Driver.disk_read(STORAGE_LUN_NBR, buf, blk_addr, blk_len) != RES_OK)
   {
 		return (USBD_FAIL);
   }
@@ -267,14 +264,11 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
-	if(BSP_SD_WriteBlocks_DMA((uint32_t*)buf, 
-                       (uint64_t) (blk_addr * SDCardInfo.CardBlockSize), 
-                       SDCardInfo.CardBlockSize, 
-                       blk_len) != MSD_OK)
+	if(SD_Driver.disk_write(STORAGE_LUN_NBR, buf, blk_addr, blk_len) != RES_OK)
   {
 		return (USBD_FAIL);
   }
-	return (USBD_OK);
+  return (USBD_OK);
   /* USER CODE END 7 */ 
 }
 

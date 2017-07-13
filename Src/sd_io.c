@@ -1,29 +1,4 @@
-/**
-  ******************************************************************************
-  * @file    sd_diskio.c
-  * @author  MCD Application Team
-  * @version V1.3.0
-  * @date    08-May-2015
-  * @brief   SD Disk I/O driver
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2015 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */ 
+/* This file overrides default middleware loggic in the file sd_diskio.c */
 
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
@@ -35,6 +10,7 @@
 #define BLOCK_SIZE                512
 
 /* Private variables ---------------------------------------------------------*/
+uint8_t isSDinitaized = 0;
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
@@ -42,25 +18,16 @@ static volatile DSTATUS Stat = STA_NOINIT;
 DSTATUS SD_initialize (BYTE);
 DSTATUS SD_status (BYTE);
 DRESULT SD_read (BYTE, BYTE*, DWORD, UINT);
-#if _USE_WRITE == 1
-  DRESULT SD_write (BYTE, const BYTE*, DWORD, UINT);
-#endif /* _USE_WRITE == 1 */
-#if _USE_IOCTL == 1
-  DRESULT SD_ioctl (BYTE, BYTE, void*);
-#endif  /* _USE_IOCTL == 1 */
+DRESULT SD_write (BYTE, const BYTE*, DWORD, UINT);
+DRESULT SD_ioctl (BYTE, BYTE, void*);
   
 const Diskio_drvTypeDef  SD_Driver =
 {
   SD_initialize,
   SD_status,
   SD_read, 
-#if  _USE_WRITE == 1
   SD_write,
-#endif /* _USE_WRITE == 1 */
-  
-#if  _USE_IOCTL == 1
   SD_ioctl,
-#endif /* _USE_IOCTL == 1 */
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -75,8 +42,9 @@ DSTATUS SD_initialize(BYTE lun)
   Stat = STA_NOINIT;
   
   /* Configure the uSD device */
-  if(BSP_SD_Init() == MSD_OK)
+  if(isSDinitaized || (BSP_SD_Init() == MSD_OK))
   {
+		isSDinitaized = 1;
     Stat &= ~STA_NOINIT;
   }
 
@@ -194,6 +162,4 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
   return res;
 }
 #endif /* _USE_IOCTL == 1 */
-  
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

@@ -595,11 +595,6 @@
               <FilePath>../Middlewares/Third_Party/FatFs/src/ff_gen_drv.c</FilePath>
             </File>
             <File>
-              <FileName>sd_diskio.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Middlewares/Third_Party/FatFs/src/drivers/sd_diskio.c</FilePath>
-            </File>
-            <File>
               <FileName>ff.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/FatFs/src/ff.c</FilePath>
@@ -613,6 +608,16 @@
               <FileName>syscall.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/FatFs/src/option/syscall.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares/Double_Bottom_USB_Stick</GroupName>
+          <Files>
+            <File>
+              <FileName>sd_io.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\sd_io.c</FilePath>
             </File>
           </Files>
         </Group>

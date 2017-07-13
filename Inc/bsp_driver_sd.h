@@ -78,7 +78,7 @@
 /* USER CODE BEGIN 0 */
 
 /* DMA definitions for SD DMA transfer */
-/*
+
 #define __DMAx_TxRx_CLK_ENABLE            __HAL_RCC_DMA2_CLK_ENABLE
 #define SD_DMAx_Tx_CHANNEL                DMA_CHANNEL_4
 #define SD_DMAx_Rx_CHANNEL                DMA_CHANNEL_4
@@ -89,7 +89,7 @@
 #define SD_DMAx_Tx_IRQHandler             DMA2_Stream6_IRQHandler   
 #define SD_DMAx_Rx_IRQHandler             DMA2_Stream3_IRQHandler 
 #define SD_DetectIRQHandler()             HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8)
-*/
+
 
 /* Exported functions --------------------------------------------------------*/   
 uint8_t BSP_SD_Init(void);
