@@ -1,10 +1,10 @@
-# Double_Bottom_USB_Stick
+# Double Bottom USB Stick
 Google Summer of Code 2017 | Open Hardware. Own Student Project.
 
 Project on Google Summer of Code [link](https://summerofcode.withgoogle.com/projects/#5177270082732032)
 
 # Project Brief
-The main goal of the project it to create a USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders will not be displayed if the USB drive is connected to a computer. The microcontroller of the USB drive will carry the process of encryption and concealment of files and folders. 
+The main goal of the project is creation a USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders and files will not be displayed if the USB drive is connected to a computer. The microcontroller of the Doublem Bottom USB Stick will carry the process of encryption and concealment of files and folders. 
 
 The only possibility to break protection will be physically reading of memory from the memory component and breaking the encryption algorithm.
 
@@ -21,7 +21,7 @@ The only possibility to break protection will be physically reading of memory fr
 # My Test Board
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Project_Assembled.jpg)
 # Getting Started
-1) Download and install USB driver [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
+1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
 2) Download and install [µVision](http://www2.keil.com/mdk5/install/);
 3) Open project [Double_Bottom_USB_Stick.uvprojx](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/MDK-ARM/Double_Bottom_USB_Stick.uvprojx) with µVision;
 4) Proceed next steps to compile and load the project sketch on the board;
@@ -32,5 +32,5 @@ The only possibility to break protection will be physically reading of memory fr
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Board.jpg)
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Card_Reader-And_MicroSD_Card.jpg)
 # More
-The project [issues](https://github.com/Lrakulka/Double_Bottom_USB_Stick/issues) contains useful information connected to the project
+The project [issues](https://github.com/Lrakulka/Double_Bottom_USB_Stick/issues) contains useful information related to the project
 
