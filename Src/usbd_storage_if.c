@@ -44,7 +44,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_storage_if.h"
 /* USER CODE BEGIN INCLUDE */
-#include "sd_io.h" /* defines SD_Driver as external */
+#include "sd_io_controller.h" /* defines SD_Driver as external */
 #include "diskio.h"
 /* USER CODE END INCLUDE */
 

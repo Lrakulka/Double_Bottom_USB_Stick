@@ -50,10 +50,9 @@
 
 #include "ff.h"
 #include "ff_gen_drv.h"
-#include "sd_io.h" /* defines SD_Driver as external */
 
 /* USER CODE BEGIN Includes */
-#include "sd_io.h" /* defines SD_Driver as external */
+#include "sd_io_controller.h" /* defines SD_Driver as external */
 /* USER CODE END Includes */
 
 extern uint8_t retSD; /* Return value for SD */
