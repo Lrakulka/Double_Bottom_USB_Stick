@@ -25,5 +25,6 @@
 *.ftl*
 *.uvoptx
 *.uvguix.List
+Middlewares/Third_Party/FatFs/src/drivers/sd_diskio.*
 
 
