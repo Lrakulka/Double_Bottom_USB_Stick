@@ -44,8 +44,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_storage_if.h"
 /* USER CODE BEGIN INCLUDE */
-#include "sd_io_controller.h" /* defines SD_Driver as external */
-#include "diskio.h"
+#include "sd_io_controller.h" 
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -114,8 +113,6 @@ const int8_t  STORAGE_Inquirydata_FS[] = {/* 36 */
 /* USER CODE END INQUIRY_DATA_FS */ 
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-extern HAL_SD_CardInfoTypedef SDCardInfo;
-extern uint32_t numberOfBlocks;
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -182,7 +179,7 @@ USBD_StorageTypeDef USBD_Storage_Interface_fops_FS =
 int8_t STORAGE_Init_FS (uint8_t lun)
 {
   /* USER CODE BEGIN 2 */ 
-  return (USBD_OK);
+  return currentPartitionInit();
   /* USER CODE END 2 */ 
 }
 
@@ -196,9 +193,7 @@ int8_t STORAGE_Init_FS (uint8_t lun)
 int8_t STORAGE_GetCapacity_FS (uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
   /* USER CODE BEGIN 3 */   
-  *block_num = SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize; 
-	*block_size = SDCardInfo.CardBlockSize;
-  return (USBD_OK);
+  return currentPartitionCapacity(block_num, block_size);
   /* USER CODE END 3 */ 
 }
 
@@ -212,7 +207,7 @@ int8_t STORAGE_GetCapacity_FS (uint8_t lun, uint32_t *block_num, uint16_t *block
 int8_t  STORAGE_IsReady_FS (uint8_t lun)
 {
   /* USER CODE BEGIN 4 */ 
-  return (USBD_OK);
+  return currentPartitionisReady();
   /* USER CODE END 4 */ 
 }
 
@@ -226,7 +221,7 @@ int8_t  STORAGE_IsReady_FS (uint8_t lun)
 int8_t  STORAGE_IsWriteProtected_FS (uint8_t lun)
 {
   /* USER CODE BEGIN 5 */ 
-  return (USBD_OK);
+  return currentPartitionIsWriteProtected();
   /* USER CODE END 5 */ 
 }
 
@@ -243,11 +238,7 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
-	if(SD_Driver.disk_read(STORAGE_LUN_NBR, buf, blk_addr, blk_len) != RES_OK)
-  {
-		return (USBD_FAIL);
-  }
-  return (USBD_OK);
+	return currentPartitionRead(buf, blk_addr, blk_len);
   /* USER CODE END 6 */ 
 }
 
@@ -264,11 +255,7 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
-	if(SD_Driver.disk_write(STORAGE_LUN_NBR, buf, blk_addr, blk_len) != RES_OK)
-  {
-		return (USBD_FAIL);
-  }
-  return (USBD_OK);
+	return currentPartitionWrite(buf, blk_addr, blk_len);
   /* USER CODE END 7 */ 
 }
 
@@ -282,7 +269,7 @@ int8_t STORAGE_Write_FS (uint8_t lun,
 int8_t STORAGE_GetMaxLun_FS (void)
 {
   /* USER CODE BEGIN 8 */ 
-  return (STORAGE_LUN_NBR - 1);
+  return currentPartitionMaxLun();
   /* USER CODE END 8 */ 
 }
 

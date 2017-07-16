@@ -47,7 +47,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "sd_io_controller.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -73,7 +73,6 @@ static void MX_SDIO_SD_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-#define STORAGE_LUN                			 1
 /* USER CODE END 0 */
 
 int main(void)
@@ -98,7 +97,7 @@ int main(void)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-	SD_Driver.disk_initialize(STORAGE_LUN);
+	initControllerMemory();
   /* USER CODE END 2 */
 
   /* Infinite loop */
