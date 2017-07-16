@@ -8,6 +8,7 @@
 extern Diskio_drvTypeDef  SD_Driver;
 
 DSTATUS initControllerMemory(void);
+DSTATUS changePartition(char*, char*, char*);
 // Operations with current visible partition
 int8_t currentPartitionCapacity(uint32_t*, uint16_t*);
 int8_t currentPartitionInit(void);

@@ -9,7 +9,8 @@
 /* Private typedef -----------------------------------------------------------*/
 // Partition encryption
 typedef enum {
-	ENCRYPTED = 0,		
+	ENCRYPTED = 0,	
+	NOT_ENCRYPTED,
 	DECRYPTED
 } EncryptionType;
 
@@ -17,18 +18,22 @@ typedef struct {
    DWORD startSector;
 	 DWORD lastSector;
 	 UINT sectorNumber;
+	 char name[20];			// Partition name must be less than 21 symbols
 	 EncryptionType encryptionType;
 } Partition;
 
 typedef struct {
    Partition partitions[255];
 	 uint8_t partitionsNumber;
-	 uint8_t currPartitionNumber;
+	 uint8_t currPartitionNumber;	 
+	 char key[20];			// Current partition key (May not be)
+	 char rootPartKey[40];	// General password to enter to hidden partitions
+	 EncryptionType rootPartEncrypType;
 } PartitionsStructure;
 
 /* Private define ------------------------------------------------------------*/
 /* Block Size in Bytes */
-#define BLOCK_SIZE                			 512
+#define STORAGE_BLOCK_SIZE               512
 #define STORAGE_LUN_NBR                  0  
 
 /* Disk Status Bits (DSTATUS) */
@@ -38,7 +43,7 @@ typedef struct {
 #define STA_PROTECT		0x04	/* Write protected */
 
 /* Private variables ---------------------------------------------------------*/
-static volatile PartitionsStructure partitionsStructure;
+static PartitionsStructure partitionsStructure;
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
@@ -49,7 +54,11 @@ extern HAL_SD_CardInfoTypedef SDCardInfo;
 DWORD getPartitionSector(DWORD);
 uint8_t isPartitionContainsMemory(DWORD, UINT);
 Partition getPartition(void);
+BYTE* decryptPartitionMemory(BYTE*);
+BYTE* encryptPartitionMemory(BYTE*);
 /* Private SD Card function prototypes -----------------------------------------------*/
+DSTATUS initRootPart(const char*);
+DSTATUS checkMainKey(const char*);
 DSTATUS SD_initialize (BYTE);
 DSTATUS SD_status (BYTE);
 DRESULT SD_read (BYTE, BYTE*, DWORD, UINT);
@@ -112,7 +121,9 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count) {
   
 	DWORD shiftedSector = getPartitionSector(sector);
 	if (isPartitionContainsMemory(shiftedSector, count) 
-		|| (BSP_SD_ReadBlocks_DMA((uint32_t*) buff, (uint64_t) (shiftedSector * BLOCK_SIZE), BLOCK_SIZE, count) != MSD_OK)) {
+		|| (BSP_SD_ReadBlocks_DMA((uint32_t*) decryptPartitionMemory(buff), 
+					(uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
+					STORAGE_BLOCK_SIZE, count) != MSD_OK)) {
 		res = RES_ERROR;
 	}
   
@@ -134,7 +145,9 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	
 	DWORD shiftedSector = getPartitionSector(sector);
   if (isPartitionContainsMemory(shiftedSector, count)
-		|| (BSP_SD_WriteBlocks_DMA((uint32_t*) buff, (uint64_t) (shiftedSector * BLOCK_SIZE), BLOCK_SIZE, count) != MSD_OK)) {
+		|| (BSP_SD_WriteBlocks_DMA((uint32_t*) encryptPartitionMemory((BYTE*) buff), 
+					(uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
+					STORAGE_BLOCK_SIZE, count) != MSD_OK)) {
 		res = RES_ERROR;
 	}
   
@@ -167,19 +180,19 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
   /* Get number of sectors on the disk (DWORD) */
   case GET_SECTOR_COUNT :
     BSP_SD_GetCardInfo(&CardInfo);
-    *(DWORD*)buff = CardInfo.CardCapacity / BLOCK_SIZE;
+    *(DWORD*)buff = CardInfo.CardCapacity / STORAGE_BLOCK_SIZE;
     res = RES_OK;
     break;
   
   /* Get R/W sector size (WORD) */
   case GET_SECTOR_SIZE :
-    *(WORD*)buff = BLOCK_SIZE;
+    *(WORD*)buff = STORAGE_BLOCK_SIZE;
     res = RES_OK;
     break;
   
   /* Get erase block size in unit of sector (DWORD) */
   case GET_BLOCK_SIZE :
-    *(DWORD*)buff = BLOCK_SIZE;
+    *(DWORD*)buff = STORAGE_BLOCK_SIZE;
     break;
   
   default:
@@ -192,7 +205,7 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 /* USB interface logic ---------------------------------------------------------*/
 int8_t currentPartitionCapacity(uint32_t *block_num, uint16_t *block_size) {
 	*block_num = getPartition().sectorNumber;
-	*block_size = BLOCK_SIZE;
+	*block_size = STORAGE_BLOCK_SIZE;
 	return USBD_OK;
 }
 
@@ -226,20 +239,62 @@ DSTATUS initControllerMemory(void) {
 		// TODO: Write data getter from last SD Card sector
 		partitionsStructure.partitionsNumber = 2;
 		partitionsStructure.partitions[0].startSector = 0x0;
-		partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize) / 2;
+		partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
 		partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector;
 		
 		partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
-		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize;
+		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE;
 		partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector - partitionsStructure.partitions[1].startSector;
 		partitionsStructure.currPartitionNumber = 1;
-		
+		//-------
 		res = RES_OK;
 	}
 	return res;
 }
 
+DSTATUS changePartition(char *partName, char *partKey, char *mainKey) {
+	DSTATUS res = RES_ERROR;
+	if (checkMainKey(mainKey) == 0) {
+		for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
+			if (strcmp(partName, partitionsStructure.partitions[partNmb].name) == 0) {
+				partitionsStructure.currPartitionNumber = partNmb;
+				res = RES_OK;
+			}
+		}
+	}
+	return res;
+}
+
 /* Private controller functions ---------------------------------------------------------*/
+DSTATUS initRootPart(const char *rootPartKey) {
+	DSTATUS res = RES_ERROR;
+	// TODO: init of the root partition
+	res = RES_OK;
+	return res;
+}
+
+DSTATUS checkMainKey(const char *rootPartKey) {
+	DSTATUS res = RES_ERROR;
+	switch (partitionsStructure.rootPartEncrypType) {
+		case ENCRYPTED: {
+			res = initRootPart(rootPartKey);
+			if (res == RES_OK) {
+				partitionsStructure.rootPartEncrypType = DECRYPTED;
+				strcpy(partitionsStructure.rootPartKey, rootPartKey);
+			}
+			break;
+		}
+		case DECRYPTED: {
+			if (strcmp(rootPartKey, partitionsStructure.rootPartKey)) {
+				res = RES_OK;
+			}
+			break;
+		}
+		default: ;
+	}
+	return res;
+}
+
 DWORD getPartitionSector(DWORD sector) {
 	return sector + getPartition().startSector;
 }
@@ -250,6 +305,22 @@ uint8_t isPartitionContainsMemory(DWORD shiftedSector, UINT count) {
 
 Partition getPartition() {
 	return partitionsStructure.partitions[partitionsStructure.currPartitionNumber];
+}
+
+BYTE* decryptPartitionMemory(BYTE *buff) {
+	if (getPartition().encryptionType == ENCRYPTED) {
+		// TODO: decryption
+		return buff;
+	}
+	return buff;
+}
+
+BYTE* encryptPartitionMemory(BYTE *buff) {
+	if (getPartition().encryptionType == ENCRYPTED) {
+		// TODO: ecryption
+		return buff;
+	}
+	return buff;
 }
 #endif /* _USE_IOCTL == 1 */
 
