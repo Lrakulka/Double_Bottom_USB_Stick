@@ -1,3 +1,4 @@
+#include <string.h>
 #include "user_interface.h"
 #include "fatfs.h"
 #include "sd_io_controller.h"
@@ -18,7 +19,7 @@ WORD partConfigLastModifDate = 0;		/* Last modified date of partition config fil
 /* Private user intarface function prototypes -----------------------------------------------*/
 FRESULT checkConfigModifDate(const char*, WORD*);
 FRESULT doRootConfig(const char*, const uint32_t*);
-FRESULT doPartConfig(const char*, const uint32_t*);
+FRESULT doPartConfig(const char*, const uint32_t*, char*, char*, char*);
 /* Public user intarface functions ---------------------------------------------------------*/
 void checkConfFiles() {
 	if ((checkConfigModifDate(ROOT_CONFIG_FILE_NAME, &rootConfigLastModifDate) == FR_OK)
@@ -36,8 +37,10 @@ void checkConfFiles() {
 	if ((checkConfigModifDate(PART_CONFIG_FILE_NAME, &partConfigLastModifDate) == FR_OK)
 		&& (f_open(&configFile, PART_CONFIG_FILE_NAME, FA_READ) == FR_OK) 
 		&& (f_read(&configFile, buff, sizeof(buff), &bytesRead) == FR_OK)) {
-			
-			if (doPartConfig(buff, &bytesRead) == FR_OK) {
+			char *rootKey;
+			char *partName;
+			char *partKey;
+			if (doPartConfig(buff, &bytesRead, rootKey, partName, partKey) == FR_OK) {
 				f_close(&configFile);
 				f_unlink(PART_CONFIG_FILE_NAME);
 			} else {
@@ -61,9 +64,21 @@ FRESULT doRootConfig(const char *buff, const uint32_t *bytesRead) {
 	return FR_OK;
 }
 
-FRESULT doPartConfig(const char *buff, const uint32_t *bytesRead) {
-	//TODO
-	return FR_OK;
+FRESULT doPartConfig(const char *buff, const uint32_t *bytesRead, char *rootKey, char *partName, char *partKey) {
+	FRESULT res = FR_INVALID_PARAMETER;
+	for (uint32_t i = 0; i < *bytesRead; ++i) {
+		if (buff[i] == '\n') {
+			strncpy(rootKey, buff, i);
+			for (uint32_t j = i + 1; j < *bytesRead; ++j) {
+				if (buff[i] == ' ') {
+					strncpy(partName, buff + i + 1, j - i - 1);
+					strncpy(partKey, buff + j + 1, *bytesRead - j - 1);
+					res = FR_OK;
+				}
+			}
+		}
+	}
+	return res;
 }
 
 FRESULT checkConfigModifDate(const char *path, WORD *lastModifTime) {
