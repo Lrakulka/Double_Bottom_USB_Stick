@@ -166,7 +166,6 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
   DRESULT res = RES_ERROR;
-  SD_CardInfo CardInfo;
   
   if (Stat & STA_NOINIT) return RES_NOTRDY;
   
@@ -179,8 +178,8 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
   
   /* Get number of sectors on the disk (DWORD) */
   case GET_SECTOR_COUNT :
-    BSP_SD_GetCardInfo(&CardInfo);
-    *(DWORD*)buff = CardInfo.CardCapacity / STORAGE_BLOCK_SIZE;
+    //BSP_SD_GetCardInfo(&CardInfo);
+    *(DWORD*)buff = getPartition().sectorNumber;
     res = RES_OK;
     break;
   
@@ -245,7 +244,7 @@ DSTATUS initControllerMemory(void) {
 		partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
 		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE;
 		partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector - partitionsStructure.partitions[1].startSector;
-		partitionsStructure.currPartitionNumber = 1;
+		partitionsStructure.currPartitionNumber = 0;
 		//-------
 		res = RES_OK;
 	}
