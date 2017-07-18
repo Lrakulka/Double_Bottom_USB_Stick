@@ -3,10 +3,10 @@
 #include "fatfs.h"
 #include "sd_io_controller.h"
 
-#define ROOT_CONFIG_FILE_NAME "root_config.txt"
-#define ROOT_CONFIG_FILE_NAME_FAILED "root_config_failed.txt"
-#define PART_CONFIG_FILE_NAME "part_config.txt"
-#define PART_CONFIG_FILE_NAME_FAILED "part_config_failed.txt"
+#define ROOT_CONFIG_FILE_NAME 					"ROOTCON_.TXT"
+#define ROOT_CONFIG_FILE_NAME_FAILED 		"ROOTCONF.TXT"
+#define PART_CONFIG_FILE_NAME 					"PARTCON_.TXT"
+#define PART_CONFIG_FILE_NAME_FAILED 		"PARTCONF.TXT"
 
 /* Private varibles -----------------------------------------------*/
 FATFS SDFatFs;  										/* File system object for SD card logical drive */
@@ -17,12 +17,46 @@ WORD rootConfigLastModifDate = 0;		/* Last modified date of root config file*/
 WORD partConfigLastModifDate = 0;		/* Last modified date of partition config file*/
 
 /* Private user intarface function prototypes -----------------------------------------------*/
-FRESULT checkConfigModifDate(const char*, WORD*);
-FRESULT doRootConfig(const char*, const uint32_t*);
-FRESULT doPartConfig(const char*, const uint32_t*, char*, char*, char*);
+uint8_t isConfigFile(const FILINFO*, const char*, const WORD*);
+FRESULT doRootConfig(void);
+FRESULT doPartConfig(void);
 /* Public user intarface functions ---------------------------------------------------------*/
 void checkConfFiles() {
-	if ((checkConfigModifDate(ROOT_CONFIG_FILE_NAME, &rootConfigLastModifDate) == FR_OK)
+	FRESULT res;
+	DIR dir;
+	static FILINFO fno;
+	
+	res = f_opendir(&dir, SD_Path);                       			/* Open the directory */
+	if (res == FR_OK) {
+		for (;;) {
+			res = f_readdir(&dir, &fno);                   					/* Read a directory item */
+			if (res != FR_OK || fno.fname[0] == 0) break;  					/* Break on error or end of dir */
+			if (!(fno.fattrib & AM_DIR)) {                    			/* It is a file */
+				// Is root dir contains configurations files
+				if (isConfigFile(&fno, ROOT_CONFIG_FILE_NAME, &rootConfigLastModifDate) == 0) {
+					rootConfigLastModifDate = fno.ftime;
+					doRootConfig();
+				} else {
+					if (isConfigFile(&fno, PART_CONFIG_FILE_NAME, &partConfigLastModifDate) == 0) {
+						partConfigLastModifDate = fno.ftime;					
+						doPartConfig();
+					}
+				}
+			}
+		}
+		f_closedir(&dir);
+	}
+}
+
+void initPartiton(const char* partName) {
+	
+	if(f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0) != FR_OK){    
+		/* FatFs Initialization Error : set the red LED on */       
+	}
+}
+/* Private controller functions ---------------------------------------------------------*/
+FRESULT doRootConfig() {
+	/*if ((checkConfigModifDate(ROOT_CONFIG_FILE_NAME, &rootConfigLastModifDate) == FR_OK)
 		&& (f_open(&configFile, ROOT_CONFIG_FILE_NAME, FA_READ) == FR_OK) 
 		&& (f_read(&configFile, buff, sizeof(buff), &bytesRead) == FR_OK)) {
 
@@ -33,7 +67,13 @@ void checkConfFiles() {
 				f_close(&configFile);
 				//f_rename(ROOT_CONFIG_FILE_NAME, ROOT_CONFIG_FILE_NAME_FAILED);
 			}				
-	}
+	}*/
+
+	return FR_OK;
+}
+
+FRESULT doPartConfig() {
+	/*
 	if ((checkConfigModifDate(PART_CONFIG_FILE_NAME, &partConfigLastModifDate) == FR_OK)
 		&& (f_open(&configFile, PART_CONFIG_FILE_NAME, FA_READ) == FR_OK) 
 		&& (f_read(&configFile, buff, sizeof(buff), &bytesRead) == FR_OK)) {
@@ -48,23 +88,7 @@ void checkConfFiles() {
 				//f_rename(PART_CONFIG_FILE_NAME, PART_CONFIG_FILE_NAME_FAILED);
 			}		
 	}
-}
-
-void initPartiton(const char* partName) {
-	
-	if(f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0) != FR_OK){    
-		/* FatFs Initialization Error : set the red LED on */        
-		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);         
-		while(1);      
-	}
-}
-/* Private controller functions ---------------------------------------------------------*/
-FRESULT doRootConfig(const char *buff, const uint32_t *bytesRead) {
-	//TODO
-	return FR_OK;
-}
-
-FRESULT doPartConfig(const char *buff, const uint32_t *bytesRead, char *rootKey, char *partName, char *partKey) {
+		
 	FRESULT res = FR_INVALID_PARAMETER;
 	for (uint32_t i = 0; i < *bytesRead; ++i) {
 		if (buff[i] == '\n') {
@@ -77,29 +101,10 @@ FRESULT doPartConfig(const char *buff, const uint32_t *bytesRead, char *rootKey,
 				}
 			}
 		}
-	}
-	return res;
+	}*/
+	return FR_OK;
 }
 
-FRESULT checkConfigModifDate(const char *path, WORD *lastModifTime) {
-	FRESULT res;
-	DIR dir;
-	static FILINFO fno;
-
-	res = f_opendir(&dir, path);                     /* Open the directory */
-	if (res == FR_OK) {
-		res = f_readdir(&dir, &fno);                   /* Read a directory item */
-		if (res != FR_OK || fno.fname[0] == 0) {
-			res = FR_INT_ERR;  												   /* Break on error or end of dir */
-		} else {
-			if ((fno.fattrib & AM_DIR)								   /* It is a directory */
-				 || (*lastModifTime == fno.ftime)) {        
-				res = FR_INVALID_NAME;
-			} else {                                     /* It is a file. */
-				res = FR_OK;
-			}
-		}
-		f_closedir(&dir);
-	}
-	return res;
+uint8_t isConfigFile(const FILINFO *fno, const char *fileName, const WORD *lastModifTime) {
+	return ((strcmp(fno->fname, fileName) == 0) && (fno->ftime != *lastModifTime)) ? 0 : 1;
 }
