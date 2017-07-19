@@ -47,7 +47,6 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-#include "sd_io_controller.h"
 #include "user_interface.h"
 /* USER CODE END Includes */
 
@@ -103,6 +102,10 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 	initControllerMemory();
+	//------
+	initPartiton("");
+
+	//-------
 	HAL_TIM_Base_Start_IT(&htim14);
   /* USER CODE END 2 */
 

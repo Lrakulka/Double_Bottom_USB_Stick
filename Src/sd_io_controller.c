@@ -7,29 +7,6 @@
 #include "usbd_storage_if.h"
 
 /* Private typedef -----------------------------------------------------------*/
-// Partition encryption
-typedef enum {
-	ENCRYPTED = 0,	
-	NOT_ENCRYPTED,
-	DECRYPTED
-} EncryptionType;
-
-typedef struct {
-   DWORD startSector;
-	 DWORD lastSector;
-	 UINT sectorNumber;
-	 char name[20];			// Partition name must be less than 21 symbols
-	 EncryptionType encryptionType;
-} Partition;
-
-typedef struct {
-   Partition partitions[255];
-	 uint8_t partitionsNumber;
-	 uint8_t currPartitionNumber;	 
-	 char key[20];			// Current partition key (May not be)
-	 char rootPartKey[40];	// General password to enter to hidden partitions
-	 EncryptionType rootPartEncrypType;
-} PartitionsStructure;
 
 /* Private define ------------------------------------------------------------*/
 /* Block Size in Bytes */
@@ -43,7 +20,7 @@ typedef struct {
 #define STA_PROTECT		0x04	/* Write protected */
 
 /* Private variables ---------------------------------------------------------*/
-static PartitionsStructure partitionsStructure;
+PartitionsStructure partitionsStructure;
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
@@ -58,7 +35,6 @@ BYTE* decryptPartitionMemory(BYTE*);
 BYTE* encryptPartitionMemory(BYTE*);
 /* Private SD Card function prototypes -----------------------------------------------*/
 DSTATUS initRootPart(const char*);
-DSTATUS checkMainKey(const char*);
 DSTATUS SD_initialize (BYTE);
 DSTATUS SD_status (BYTE);
 DRESULT SD_read (BYTE, BYTE*, DWORD, UINT);
@@ -237,31 +213,41 @@ DSTATUS initControllerMemory(void) {
 	if (SD_initialize(STORAGE_LUN_NBR) == RES_OK) {
 		// TODO: Write data getter from last SD Card sector
 		partitionsStructure.partitionsNumber = 2;
+		strcpy(partitionsStructure.partitions[0].name, "part0");
 		partitionsStructure.partitions[0].startSector = 0x0;
 		partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
 		partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector;
 		
+		strcpy(partitionsStructure.partitions[1].name, "part1");
 		partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
 		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE;
 		partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector - partitionsStructure.partitions[1].startSector;
 		partitionsStructure.currPartitionNumber = 0;
+		
+		strcpy(partitionsStructure.confKey, "confKey");
+		strcpy(partitionsStructure.rootKey, "rootKey");
+		strcpy(partitionsStructure.checkSequence, CHECK_SEQUENCE);
 		//-------
 		res = RES_OK;
 	}
 	return res;
 }
 
-DSTATUS changePartition(char *partName, char *partKey, char *mainKey) {
-	DSTATUS res = RES_ERROR;
-	if (checkMainKey(mainKey) == 0) {
-		for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
-			if (strcmp(partName, partitionsStructure.partitions[partNmb].name) == 0) {
-				partitionsStructure.currPartitionNumber = partNmb;
-				res = RES_OK;
-			}
+uint8_t changePartition(char *partName, char *partKey) {
+	uint8_t res = 1;
+	for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
+		if (strcmp(partName, partitionsStructure.partitions[partNmb].name) == 0) {
+			partitionsStructure.currPartitionNumber = partNmb;
+			res = 0;
+			break;
 		}
 	}
 	return res;
+}
+
+uint8_t setConf(const PartitionsStructure *newConf, PartitionsStructure *oldConf) {
+	//TODO
+	return 0;
 }
 
 /* Private controller functions ---------------------------------------------------------*/
@@ -269,28 +255,6 @@ DSTATUS initRootPart(const char *rootPartKey) {
 	DSTATUS res = RES_ERROR;
 	// TODO: init of the root partition
 	res = RES_OK;
-	return res;
-}
-
-DSTATUS checkMainKey(const char *rootPartKey) {
-	DSTATUS res = RES_ERROR;
-	switch (partitionsStructure.rootPartEncrypType) {
-		case ENCRYPTED: {
-			res = initRootPart(rootPartKey);
-			if (res == RES_OK) {
-				partitionsStructure.rootPartEncrypType = DECRYPTED;
-				strcpy(partitionsStructure.rootPartKey, rootPartKey);
-			}
-			break;
-		}
-		case DECRYPTED: {
-			if (strcmp(rootPartKey, partitionsStructure.rootPartKey)) {
-				res = RES_OK;
-			}
-			break;
-		}
-		default: ;
-	}
 	return res;
 }
 
