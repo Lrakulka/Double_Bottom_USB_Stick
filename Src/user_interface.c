@@ -113,7 +113,7 @@ void commandExecutor(void) {
 					break;
 				}
 				case UPDATE_ROOT_CONFIGURATIONS: {
-					if ((strcmp(partitionsStructure.rootKey, password) == 0) 
+					if ((strcmp(partitionsStructure.confKey, password) == 0) 
 							&& (doRootConfig(buff, &bytesRead, &shiftPosition) == 0)) {
 						// ----f_unlink(PART_CONFIG_FILE_NAME);
 					} else {
@@ -233,7 +233,7 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
 
 void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) {
 	f_printf(fil, "%s\r\n", "-------Configurations of The Device---->To save changes please delete this line");
-	f_printf(fil, "%s\r\n", partitionsStructure->rootKey);
+	f_printf(fil, "%s\r\n", partitionsStructure->confKey);
 	// Configuration
 	f_printf(fil, "%s <--- Key for revealing device configurations\r\n", partitionsStructure->confKey);
 	f_printf(fil, "%s <--- Root Key of the device\r\n", partitionsStructure->rootKey);
