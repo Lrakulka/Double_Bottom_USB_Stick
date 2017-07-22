@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "user_interface.h"
 #include "fatfs.h"
 #include "sd_io_controller.h"
@@ -7,6 +8,8 @@
 #define COMMAND_FILE_NAME_FAILED				"COMMANDF.TXT"
 
 #define COMMAND_MAX_LENGTH							10					
+
+#define PUBLIC_PARTITION_KEY						"public"
 // Partition encryption
 typedef enum {
 	CHANGE_PARTITION = 0,	
@@ -83,7 +86,7 @@ void initPartiton(const char* partName) {
 /* Private controller functions ---------------------------------------------------------*/
 void commandExecutor(void) {
 	FIL commandFile;																			/* File object */
-	char buff[256];
+	char buff[500];
 	uint32_t bytesRead; 																	/* File write/read counts */
 	Command command;
 #if ROOT_KEY_LENGHT > CONF_KEY_LENGHT && ROOT_KEY_LENGHT > SHOW_CONF_KEY_LENGHT
@@ -131,6 +134,7 @@ void commandExecutor(void) {
 					break;
 				}
 				default: {
+					;
 					// do nothing
 				}
 			}
@@ -173,7 +177,7 @@ Command getCommand(char *command) {
 }
 
 uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t *shift) {
-	uint8_t res =  parseRootConfig(buff, bytesRead, shift, &newConfStructure);
+	uint8_t res = parseRootConfig(buff, bytesRead, shift, &newConfStructure);
 	if (res == 0) {
 		res = setConf(&newConfStructure, &partitionsStructure);
 	}
@@ -207,10 +211,127 @@ uint8_t parsePartConfig(const char *buff, const uint32_t *bytesRead,
 	return res;
 }
 
-uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, 
-												const uint32_t *shift, PartitionsStructure *partitionsStructure) {
+uint8_t scrollToLineEnd(const char *buff, const uint32_t *bytesRead, uint32_t *shift) {
 	uint8_t res = 1;
-	
+	int8_t newLineStat;
+	for (uint32_t i = *shift; i < *bytesRead; ++i) {
+		newLineStat = isNewLineOrEnd(buff, &i, bytesRead);
+		if (newLineStat != -1) {
+			*shift = i + newLineStat + 1;
+			res = 0;
+			break;
+		}
+	}
+	return res;
+}
+
+uint8_t findWordBeforeSpace(const char *buff, const uint32_t *bytesRead,
+													uint32_t *start, uint8_t *size) {
+	uint8_t res = 1;
+	for (uint32_t i = *start; i < *bytesRead; ++i) {
+		if ((buff[i] != ' ') && (buff[i] != '\t')) {
+			*start = i;
+			for (; i < *bytesRead; ++i) {
+				if ((buff[i] == ' ') || (buff[i] == '\t')) {
+					*size = i - *start;
+					res = 0;
+					break;
+				}
+			}
+			break;
+		}
+	}
+	return res;
+}
+
+uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, 
+												const uint32_t *shift, PartitionsStructure *newPartitionsStructure) {
+	uint8_t res = 1;
+	uint32_t start = *shift;
+  uint8_t size;
+	char *end;
+	char buffer[10];
+	// Set sequence
+	strcpy(newPartitionsStructure->checkSequence, CHECK_SEQUENCE);									
+	// Get password for configuration
+	if (findWordBeforeSpace(buff, bytesRead, &start, &size) == 0) {
+		strncpy(newPartitionsStructure->confKey, buff + start, size);		
+		start += size;
+		if (scrollToLineEnd(buff, bytesRead, &start) == 0) {
+			// Get root password
+			if (findWordBeforeSpace(buff, bytesRead, &start, &size) == 0) {
+				strncpy(newPartitionsStructure->rootKey, buff + start, size);		
+				start += size;
+				// Miss one line
+				if ((scrollToLineEnd(buff, bytesRead, &start) == 0) 
+					&& (scrollToLineEnd(buff, bytesRead, &start) == 0)) {
+					// Get partition configuration
+					uint8_t i = 0;
+					uint8_t partNumber = 0;
+					for (uint8_t part; i < MAX_PART_NUMBER; ++i) {
+						// Get partition number
+						if (findWordBeforeSpace(buff, bytesRead, &start, &size) != 0) {
+							break;
+						}
+						memset(buffer, '\0', sizeof(buffer));
+						strncpy(buffer, buff + start, size);		
+						start += size;
+						part = strtol(buffer, &end, 10); 
+						if (end == buffer || *end != '\0') {
+							break;
+						}
+						// Get partition name
+						if (findWordBeforeSpace(buff, bytesRead, &start, &size) != 0) {
+							break;
+						}
+						strncpy(newPartitionsStructure->partitions[part].name, buff + start, size);		
+						start += size;
+						// Get partition key
+						if (findWordBeforeSpace(buff, bytesRead, &start, &size) != 0) {
+							break;
+						}
+						strncpy(newPartitionsStructure->partitions[part].key, buff + start, size);		
+						start += size;
+						// Set partition type (encrypted ot not)
+						if ((part == 0) 
+								|| (strcmp(newPartitionsStructure->partitions[part].key, PUBLIC_PARTITION_KEY) == 0)) {
+							newPartitionsStructure->partitions[part].encryptionType = NOT_ENCRYPTED;
+						} else {
+							newPartitionsStructure->partitions[part].encryptionType = ENCRYPTED;
+						}
+						// Get partition number of sectors
+						if (findWordBeforeSpace(buff, bytesRead, &start, &size) != 0) {
+							break;
+						}
+						if (part != 0) {
+							newPartitionsStructure->partitions[part]
+									.startSector = newPartitionsStructure->partitions[part - 1].lastSector + 1;
+						} else {
+							newPartitionsStructure->partitions[part].startSector = 0;
+						}
+						memset(buffer, '\0', sizeof(buffer));
+						strncpy(buffer, buff + start, size);
+						start += size;
+						newPartitionsStructure->partitions[part].sectorNumber = strtol(buffer, &end, 10); 
+						if (end == buffer || *end != '\0') {
+							break;
+						}
+						newPartitionsStructure->partitions[part].lastSector = newPartitionsStructure->partitions[part].startSector 
+								+ newPartitionsStructure->partitions[part].sectorNumber;
+						if (scrollToLineEnd(buff, bytesRead, &start) != 0) {
+							break;
+						}
+						partNumber++;
+					}
+					if (partNumber > 1) {
+						newPartitionsStructure->partitionsNumber = partNumber;
+						res = 0;
+					}
+				}
+			}
+		}
+	}
+							
 	return res;
 }
 
@@ -232,27 +353,28 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
 }
 
 void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) {
-	f_printf(fil, "%s\r\n", "-------Configurations of The Device---->To save changes please delete this line");
-	f_printf(fil, "%s\r\n", partitionsStructure->confKey);
+	f_printf(fil, "%s\n", "-------Configurations of The Device---->To save changes please delete this line");
+	f_printf(fil, "%s\n", conversion[1].str);			// Update to update configurations
+	f_printf(fil, "%s\n", partitionsStructure->confKey);
 	// Configuration
-	f_printf(fil, "%s <--- Key for revealing device configurations\r\n", partitionsStructure->confKey);
-	f_printf(fil, "%s <--- Root Key of the device\r\n", partitionsStructure->rootKey);
+	f_printf(fil, "%s <--- Key for revealing device configurations\n", partitionsStructure->confKey);
+	f_printf(fil, "%s <--- Root Key of the device\n", partitionsStructure->rootKey);
 	// Partitons table
-	f_printf(fil, "#N___________Name___________Key___________Number of sectors\r\n");
-	f_printf(fil, "%-3s:", "0"); 
+	f_printf(fil, "#N___________Name___________Key___________Number of sectors\n");
+	f_printf(fil, "%-3s", "0"); 
 	f_printf(fil, "%-20s ", partitionsStructure->partitions[0].name); 
-	f_printf(fil, "%-20s ", "always public");
-	f_printf(fil, "%-10d\r\n", partitionsStructure->partitions[0].sectorNumber);
+	f_printf(fil, "%-20s ", PUBLIC_PARTITION_KEY);
+	f_printf(fil, "%-10d\n", partitionsStructure->partitions[0].sectorNumber);
 	for (uint8_t i = 1; i < partitionsStructure->partitionsNumber; ++i) {
-		f_printf(fil, "%-3d:", i);
+		f_printf(fil, "%-3d", i);
 		f_printf(fil, "%-20s ", partitionsStructure->partitions[i].name);
 		f_printf(fil, "%-20s ", partitionsStructure->partitions[i].key);
-		f_printf(fil, "%-10d\r\n", partitionsStructure->partitions[i].sectorNumber);
+		f_printf(fil, "%-10d\n", partitionsStructure->partitions[i].sectorNumber);
 	}
-	f_printf(fil, "-------------SD card available memory-------------\r\n");
-	f_printf(fil, "%u     <- Card capacity memory\t\t\t\r\n", SDCardInfo.CardCapacity); 
-	f_printf(fil, "%u     <- Card block size\t\t\t\r\n", SDCardInfo.CardBlockSize);
-	f_printf(fil, "%u     <- Card block sector number\t\t\t\r\n", 
+	f_printf(fil, "-------------SD card available memory-------------\n");
+	f_printf(fil, "%-15u     <- Card capacity memory\t\n", SDCardInfo.CardCapacity); 
+	f_printf(fil, "%-15u     <- Card block size\t\n", SDCardInfo.CardBlockSize);
+	f_printf(fil, "%-15u     <- Card block sector number\t\n", 
 						SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - CONF_STORAGE_SIZE);
 }
 
