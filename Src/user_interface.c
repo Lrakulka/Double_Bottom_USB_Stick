@@ -3,8 +3,8 @@
 #include "fatfs.h"
 #include "sd_io_controller.h"
 
-#define COMMAND_FILE_NAME 							"COMMAND_.TXT"
-#define COMMAND_FILE_NAME_FAILED	 			"COMMANDF.TXT"
+#define COMMAND_FILE_NAME								"COMMAND_.TXT"
+#define COMMAND_FILE_NAME_FAILED				"COMMANDF.TXT"
 
 #define COMMAND_MAX_LENGTH							10					
 // Partition encryption
@@ -250,9 +250,10 @@ void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) 
 		f_printf(fil, "%-10d\r\n", partitionsStructure->partitions[i].sectorNumber);
 	}
 	f_printf(fil, "-------------SD card available memory-------------\r\n");
-	f_printf(fil, "%u     <- Card capacity memory\r\n", SDCardInfo.CardCapacity); 
-	f_printf(fil, "%u     <- Card block size\r\n", SDCardInfo.CardBlockSize);
-	f_printf(fil, "%u     <- Card block sector number\r\n", SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - CONF_STORAGE_SIZE);
+	f_printf(fil, "%u     <- Card capacity memory\t\t\t\r\n", SDCardInfo.CardCapacity); 
+	f_printf(fil, "%u     <- Card block size\t\t\t\r\n", SDCardInfo.CardBlockSize);
+	f_printf(fil, "%u     <- Card block sector number\t\t\t\r\n", 
+						SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - CONF_STORAGE_SIZE);
 }
 
 
