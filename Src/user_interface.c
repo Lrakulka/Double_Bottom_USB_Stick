@@ -9,7 +9,6 @@
 
 #define COMMAND_MAX_LENGTH							10					
 
-#define PUBLIC_PARTITION_KEY						"public"
 // Partition encryption
 typedef enum {
 	CHANGE_PARTITION = 0,	

@@ -18,6 +18,7 @@
 
 #define CONF_STORAGE_SIZE				1
 
+#define PUBLIC_PARTITION_KEY						"public"
 // Partition encryption
 typedef enum {
 	NOT_INITIALIZED = 0,	

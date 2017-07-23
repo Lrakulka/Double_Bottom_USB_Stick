@@ -33,6 +33,8 @@ uint8_t isPartitionContainsMemory(DWORD, UINT);
 Partition getPartition(void);
 BYTE* decryptPartitionMemory(BYTE*);
 BYTE* encryptPartitionMemory(BYTE*);
+uint8_t checkNewPartitionsStructure(const PartitionsStructure*);
+uint8_t saveConf(const PartitionsStructure*);
 /* Private SD Card function prototypes -----------------------------------------------*/
 DSTATUS initRootPart(const char*);
 DSTATUS SD_initialize (BYTE);
@@ -249,11 +251,43 @@ uint8_t changePartition(char *partName, char *partKey) {
 }
 
 uint8_t setConf(const PartitionsStructure *newConf, PartitionsStructure *oldConf) {
-	//TODO
-	return 0;
+	uint8_t res = checkNewPartitionsStructure(newConf);
+	if (res == 0) {
+		*oldConf = *newConf;
+		oldConf->isInitilized = INITIALIZED;
+		res = saveConf(oldConf);
+	}
+	return res;
 }
 
 /* Private controller functions ---------------------------------------------------------*/
+uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
+	return 0;
+}
+
+uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructure) {
+	uint32_t blockUsed = 0;
+	if ((partitionStructure->confKey[0] == '\0') 
+			|| (partitionStructure->rootKey[0] == '\0')) {
+		return 1;
+	}
+	for (uint8_t i = 0; i < partitionStructure->partitionsNumber; ++i) {
+		if ((partitionStructure->partitions[i].name[0] == '\0') 
+			|| (partitionStructure->partitions[i].key[0] == '\0')
+			|| ((partitionStructure->partitions[i].encryptionType == NOT_ENCRYPTED) 
+					&& (strcmp(partitionStructure->partitions[i].key, PUBLIC_PARTITION_KEY) != 0))
+			|| (partitionStructure->partitions[i].lastSector != partitionStructure->partitions[i].startSector 
+					+ partitionStructure->partitions[i].sectorNumber)) {
+						return 1;
+					}
+			blockUsed += partitionStructure->partitions[i].sectorNumber;
+		}
+	if (blockUsed > SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - CONF_STORAGE_SIZE) {
+		return 1;
+	}
+	return 0;
+}
+
 DSTATUS initRootPart(const char *rootPartKey) {
 	DSTATUS res = RES_ERROR;
 	// TODO: init of the root partition
