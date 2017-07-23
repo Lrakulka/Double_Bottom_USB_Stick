@@ -349,16 +349,12 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
 
 			
 uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitionsStructure) {
-	FIL configFile;  
-	uint32_t byteswritten;      
+	FIL configFile;    
 	uint8_t res = 1;
 	
 	res = f_open(&configFile, fileName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res == FR_OK) {
 		formConfFileText(&configFile, partitionsStructure);
-		if (byteswritten != 0) {
-			res = 0;			
-		}
 		f_close(&configFile);
 	}
 	return res;
