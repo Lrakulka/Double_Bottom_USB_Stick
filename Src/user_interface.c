@@ -51,7 +51,10 @@ int8_t isNewLineOrEnd(const char*, const uint32_t*, const uint32_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 uint8_t parseConfStructure(PartitionsStructure*);
 uint8_t isNewCommandFile(const FILINFO*, const char*, const WORD*);
-
+Command getCommand(char*);
+uint8_t scrollToLineEnd(const char*, const uint32_t*, uint32_t*);
+uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
+void formConfFileText(FIL*, const PartitionsStructure*);
 /* Public user intarface functions ---------------------------------------------------------*/
 uint8_t initFatFsForPartiton() {
 	uint8_t res = 1;
