@@ -103,7 +103,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	initControllerMemory();
 	//------
-	initPartiton("");
+	initTafFsForPartiton();
 
 	//-------
 	HAL_TIM_Base_Start_IT(&htim14);

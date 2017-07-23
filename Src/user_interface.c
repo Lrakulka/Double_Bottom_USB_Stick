@@ -47,18 +47,18 @@ uint8_t parsePartConfig(const char*, const uint32_t*, const uint32_t*, char*, ch
 uint8_t parseRootConfig(const char*, const uint32_t*, const uint32_t*, PartitionsStructure*);
 void getCommandAndPassword(const char*, const uint32_t*, uint32_t*, Command*, char*);
 
-Command getCommand(char*);
 int8_t isNewLineOrEnd(const char*, const uint32_t*, const uint32_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 uint8_t parseConfStructure(PartitionsStructure*);
-uint8_t isNewRootFile(const FILINFO*, const char*, const WORD*);
+uint8_t isNewCommandFile(const FILINFO*, const char*, const WORD*);
 
 /* Public user intarface functions ---------------------------------------------------------*/
-void initPartiton(const char* partName) {
-	// TODO
+uint8_t initFatFsForPartiton() {
+	uint8_t res = 1;
 	if(f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0) != FR_OK){    
-		/* FatFs Initialization Error : set the red LED on */       
+		res = 0;      
 	}
+	return res;
 }
 
 void checkConfFiles() {
@@ -73,7 +73,7 @@ void checkConfFiles() {
 			if (res != FR_OK || fno.fname[0] == 0) break;  					/* Break on error or end of dir */
 			if (!(fno.fattrib & AM_DIR)) {                    			/* It is a file */
 				// Is root dir contains command file
-				if (isNewRootFile(&fno, COMMAND_FILE_NAME, &commandFileLastModifDate) == 0) {
+				if (isNewCommandFile(&fno, COMMAND_FILE_NAME, &commandFileLastModifDate) == 0) {
 					commandFileLastModifDate = fno.ftime;
 					commandExecutor();
 				} 
@@ -143,6 +143,15 @@ void commandExecutor(void) {
 	f_close(&commandFile);
 }
 
+Command getCommand(char *command) {
+	for (uint8_t i = 0;  i < sizeof (conversion) / sizeof (conversion[0]); ++i) {
+		if (strcmp(command, conversion[i].str) == 0) {
+				 return conversion[i].command; 
+		}
+	}
+	return NO_COMMAND; 
+}
+
 void getCommandAndPassword(const char *buff, const uint32_t *bytesRead, 
 														uint32_t *shift, Command *command, char *password) {
 	int8_t shiftEndOfLine;
@@ -168,20 +177,15 @@ void getCommandAndPassword(const char *buff, const uint32_t *bytesRead,
 	*command = getCommand(commandS);
 }
 
-Command getCommand(char *command) {
-	for (uint8_t i = 0;  i < sizeof (conversion) / sizeof (conversion[0]); ++i) {
-		if (strcmp(command, conversion[i].str) == 0)
-				 return conversion[i].command; 
-	}
-	return NO_COMMAND; 
-}
-
 uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t *shift) {
 	uint8_t res = parseRootConfig(buff, bytesRead, shift, &newConfStructure);
 	if (res == 0) {
 		res = setConf(&newConfStructure, &partitionsStructure);
 		if (res == 0) {
 			res = changePartition(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
+			if (res == 0) {
+				res = initFatFsForPartiton();
+			}
 		}
 	}
 	return res;
@@ -195,6 +199,9 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 	uint8_t res = parsePartConfig(buff, bytesRead, shift, partName, partKey);
 	if (res == 0) {
 		res = changePartition(partName, partKey);
+		if (res == 0) {
+			res = initFatFsForPartiton();
+		}
 	}
 	return res;
 }
@@ -394,6 +401,6 @@ int8_t isNewLineOrEnd(const char *buff, const uint32_t *position, const uint32_t
 	return shift;	
 }
 
-uint8_t isNewRootFile(const FILINFO *fno, const char *fileName, const WORD *lastModifTime) {
+uint8_t isNewCommandFile(const FILINFO *fno, const char *fileName, const WORD *lastModifTime) {
 	return ((strcmp(fno->fname, fileName) == 0) && (fno->ftime != *lastModifTime)) ? 0 : 1;
 }
