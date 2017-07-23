@@ -54,6 +54,13 @@ uint8_t parseConfStructure(PartitionsStructure*);
 uint8_t isNewRootFile(const FILINFO*, const char*, const WORD*);
 
 /* Public user intarface functions ---------------------------------------------------------*/
+void initPartiton(const char* partName) {
+	// TODO
+	if(f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0) != FR_OK){    
+		/* FatFs Initialization Error : set the red LED on */       
+	}
+}
+
 void checkConfFiles() {
 	FRESULT res;
 	DIR dir;
@@ -76,17 +83,10 @@ void checkConfFiles() {
 	}
 }
 
-void initPartiton(const char* partName) {
-	// TODO
-	if(f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0) != FR_OK){    
-		/* FatFs Initialization Error : set the red LED on */       
-	}
-}
-
 /* Private controller functions ---------------------------------------------------------*/
 void commandExecutor(void) {
 	FIL commandFile;																			/* File object */
-	char buff[500];
+	char buff[1000];
 	uint32_t bytesRead; 																	/* File write/read counts */
 	Command command;
 #if ROOT_KEY_LENGHT > CONF_KEY_LENGHT && ROOT_KEY_LENGHT > SHOW_CONF_KEY_LENGHT
@@ -180,6 +180,9 @@ uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 	uint8_t res = parseRootConfig(buff, bytesRead, shift, &newConfStructure);
 	if (res == 0) {
 		res = setConf(&newConfStructure, &partitionsStructure);
+		if (res == 0) {
+			res = changePartition(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
+		}
 	}
 	return res;
 }
