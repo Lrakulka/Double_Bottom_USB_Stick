@@ -383,7 +383,7 @@ void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) 
 	f_printf(fil, "%-15u     <- Card capacity memory\t\n", SDCardInfo.CardCapacity); 
 	f_printf(fil, "%-15u     <- Card block size\t\n", SDCardInfo.CardBlockSize);
 	f_printf(fil, "%-15u     <- Card block sector number\t\n", 
-						SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - CONF_STORAGE_SIZE);
+						SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_SIZE);
 }
 
 

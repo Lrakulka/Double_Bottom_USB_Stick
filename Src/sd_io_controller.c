@@ -35,6 +35,7 @@ BYTE* decryptPartitionMemory(BYTE*);
 BYTE* encryptPartitionMemory(BYTE*);
 uint8_t checkNewPartitionsStructure(const PartitionsStructure*);
 uint8_t saveConf(const PartitionsStructure*);
+uint8_t loadConf(const PartitionsStructure*);
 /* Private SD Card function prototypes -----------------------------------------------*/
 DSTATUS initRootPart(const char*);
 DSTATUS SD_initialize (BYTE);
@@ -218,15 +219,15 @@ DSTATUS initControllerMemory(void) {
 		strcpy(partitionsStructure.partitions[0].name, "part0");
 		partitionsStructure.partitions[0].startSector = 0x0;
 		partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
-		partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector;
+		partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector + 1;
 		
 		memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
 		memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
 		strcpy(partitionsStructure.partitions[1].name, "part1");
 		strcpy(partitionsStructure.partitions[1].key, "partKey");
 		partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
-		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE;
-		partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector - partitionsStructure.partitions[1].startSector;
+		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - STORAGE_SECTOR_SIZE - 1;
+		partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector - partitionsStructure.partitions[1].startSector + 1;
 		partitionsStructure.currPartitionNumber = 0;
 		
 		strcpy(partitionsStructure.confKey, "confKey");
@@ -265,6 +266,10 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
 	return 0;
 }
 
+uint8_t loadConf(const PartitionsStructure *partitionsStructure) {
+	return 0;
+}
+
 uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructure) {
 	uint32_t blockUsed = 0;
 	if ((partitionStructure->confKey[0] == '\0') 
@@ -282,7 +287,7 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
 					}
 			blockUsed += partitionStructure->partitions[i].sectorNumber;
 		}
-	if (blockUsed > SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - CONF_STORAGE_SIZE) {
+	if (blockUsed > SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_SIZE) {
 		return 1;
 	}
 	return 0;
