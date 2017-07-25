@@ -16,7 +16,7 @@
 
 #define MAX_PART_NUMBER			 		10
 
-#define STORAGE_SECTOR_SIZE			2
+#define STORAGE_SECTOR_NUMBER		2
 
 #define PUBLIC_PARTITION_KEY		"public"
 // Partition encryption

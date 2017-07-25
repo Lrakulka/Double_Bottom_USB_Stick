@@ -329,7 +329,7 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
 							break;
 						}
 						newPartitionsStructure->partitions[part].lastSector = newPartitionsStructure->partitions[part].startSector 
-								+ newPartitionsStructure->partitions[part].sectorNumber;
+								+ newPartitionsStructure->partitions[part].sectorNumber - 1;
 						if (scrollToLineEnd(buff, bytesRead, &start) != 0) {
 							break;
 						}
@@ -383,7 +383,7 @@ void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) 
 	f_printf(fil, "%-15u     <- Card capacity memory\t\n", SDCardInfo.CardCapacity); 
 	f_printf(fil, "%-15u     <- Card block size\t\n", SDCardInfo.CardBlockSize);
 	f_printf(fil, "%-15u     <- Card block sector number\t\n", 
-						SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_SIZE);
+						SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_NUMBER);
 }
 
 
