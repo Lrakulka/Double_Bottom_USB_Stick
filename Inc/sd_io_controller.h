@@ -14,11 +14,11 @@
 #define ROOT_KEY_LENGHT 				40
 #define SHOW_CONF_KEY_LENGHT 		20
 
-#define MAX_PART_NUMBER			 		255
+#define MAX_PART_NUMBER			 		10
 
-#define CONF_STORAGE_SIZE				1
+#define STORAGE_SECTOR_SIZE			2
 
-#define PUBLIC_PARTITION_KEY						"public"
+#define PUBLIC_PARTITION_KEY		"public"
 // Partition encryption
 typedef enum {
 	NOT_INITIALIZED = 0,	
@@ -35,7 +35,7 @@ typedef struct {
    DWORD startSector;
 	 DWORD lastSector;
 	 UINT sectorNumber;
-	 char name[PART_NAME_LENGHT];										// Partition name must be less than 21 symbols
+	 char name[PART_NAME_LENGHT];									// Partition name must be less than 21 symbols
 	 char key[PART_KEY_LENGHT];										// Partition key must be less than 21 symbols
 	 EncryptionType encryptionType;
 } Partition;
