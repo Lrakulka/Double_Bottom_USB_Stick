@@ -258,12 +258,6 @@ uint8_t setConf(const PartitionsStructure *newConf, PartitionsStructure *oldConf
 		oldConf->isInitilized = INITIALIZED;
 		res = saveConf(oldConf);
 	}
-	// For test
-	PartitionsStructure loadPart;
-	res = loadConf(&loadPart);
-	if (res == 0 && strcmp(loadPart.checkSequence, CHECK_SEQUENCE) == 0)
-		res = 0;
-	else res = 1;
 	return res;
 }
 
