@@ -271,8 +271,8 @@ uint8_t setConf(const PartitionsStructure *newConf, PartitionsStructure *oldConf
 /* Private controller functions ---------------------------------------------------------*/
 uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
 	uint8_t res = 0;
-	uint32_t memorySize = SDCardInfo.CardBlockSize * STORAGE_SECTOR_NUMBER;
-	uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize;
+	uint32_t memorySize = STORAGE_BLOCK_SIZE * STORAGE_SECTOR_NUMBER;
+	uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
 	BYTE alignMemory[memorySize];
 	memcpy(alignMemory, partitionsStructure, sizeof(*partitionsStructure));
 	
@@ -285,8 +285,8 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
 
 uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) {
 	uint8_t res = 1;
-	uint32_t memorySize = SDCardInfo.CardBlockSize * STORAGE_SECTOR_NUMBER;
-	uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize;
+	uint32_t memorySize = STORAGE_BLOCK_SIZE * STORAGE_SECTOR_NUMBER;
+	uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
 	BYTE alignMemory[memorySize];
 	
 	if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
@@ -318,7 +318,7 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
 					}
 			blockUsed += partitionStructure->partitions[i].sectorNumber;
 		}
-	if (blockUsed > SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_NUMBER) {
+	if (blockUsed > SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - STORAGE_SECTOR_NUMBER) {
 		return 1;
 	}
 	return 0;
