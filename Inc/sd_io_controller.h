@@ -53,7 +53,7 @@ typedef struct {
 extern Diskio_drvTypeDef  SD_Driver;
 
 DSTATUS initControllerMemory(void);
-uint8_t changePartition(char*, char*);
+uint8_t changePartition(const char*, const char*);
 // Operations with current visible partition
 int8_t currentPartitionCapacity(uint32_t*, uint16_t*);
 int8_t currentPartitionInit(void);

@@ -31,11 +31,11 @@ extern HAL_SD_CardInfoTypedef SDCardInfo;
 DWORD getPartitionSector(DWORD);
 uint8_t isPartitionContainsMemory(DWORD, UINT);
 Partition getPartition(void);
-BYTE* decryptPartitionMemory(BYTE*);
-BYTE* encryptPartitionMemory(BYTE*);
+BYTE* decryptMemory(BYTE*, const char*, const uint32_t);
+BYTE* encryptMemory(BYTE*, const char*, const uint32_t);
 uint8_t checkNewPartitionsStructure(const PartitionsStructure*);
 uint8_t saveConf(const PartitionsStructure*);
-uint8_t loadConf(const PartitionsStructure*);
+uint8_t loadConf(PartitionsStructure*, const char*);
 /* Private SD Card function prototypes -----------------------------------------------*/
 DSTATUS initRootPart(const char*);
 DSTATUS SD_initialize (BYTE);
@@ -100,9 +100,13 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count) {
   
 	DWORD shiftedSector = getPartitionSector(sector);
 	if (isPartitionContainsMemory(shiftedSector, count) 
-		|| (BSP_SD_ReadBlocks_DMA((uint32_t*) decryptPartitionMemory(buff), 
+		|| (BSP_SD_ReadBlocks_DMA((uint32_t*) buff, 
 					(uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
 					STORAGE_BLOCK_SIZE, count) != MSD_OK)) {
+						
+		if (getPartition().encryptionType == ENCRYPTED) {
+			buff = decryptMemory(buff, getPartition().key, STORAGE_BLOCK_SIZE);
+		}
 		res = RES_ERROR;
 	}
   
@@ -124,9 +128,12 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	
 	DWORD shiftedSector = getPartitionSector(sector);
   if (isPartitionContainsMemory(shiftedSector, count)
-		|| (BSP_SD_WriteBlocks_DMA((uint32_t*) encryptPartitionMemory((BYTE*) buff), 
+		|| (BSP_SD_WriteBlocks_DMA(
+					(uint32_t*) (getPartition().encryptionType == ENCRYPTED ?
+							encryptMemory((BYTE*) buff, getPartition().key, STORAGE_BLOCK_SIZE) :	buff),
 					(uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
 					STORAGE_BLOCK_SIZE, count) != MSD_OK)) {
+						
 		res = RES_ERROR;
 	}
   
@@ -239,7 +246,7 @@ DSTATUS initControllerMemory(void) {
 	return res;
 }
 
-uint8_t changePartition(char *partName, char *partKey) {
+uint8_t changePartition(const char *partName, const char *partKey) {
 	uint8_t res = 1;
 	for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
 		if (strcmp(partName, partitionsStructure.partitions[partNmb].name) == 0) {
@@ -269,15 +276,14 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
 	BYTE alignMemory[memorySize];
 	memcpy(alignMemory, partitionsStructure, sizeof(*partitionsStructure));
 	
-	if (BSP_SD_WriteBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
-			STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER) != MSD_OK) {
+	if (BSP_SD_WriteBlocks_DMA((uint32_t*) encryptMemory(alignMemory, partitionsStructure->rootKey, STORAGE_BLOCK_SIZE), 
+			storageAddr, STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER) != MSD_OK) {
 		res = 1;
 	}
-					
 	return res;
 }
 
-uint8_t loadConf(const PartitionsStructure *partitionsStructure) {
+uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) {
 	uint8_t res = 1;
 	uint32_t memorySize = SDCardInfo.CardBlockSize * STORAGE_SECTOR_NUMBER;
 	uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize;
@@ -285,13 +291,13 @@ uint8_t loadConf(const PartitionsStructure *partitionsStructure) {
 	
 	if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
 			STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER) == MSD_OK) {
-		memcpy((void*) partitionsStructure, alignMemory, sizeof(*partitionsStructure));
+		memcpy((void*) partitionsStructure, 
+				decryptMemory(alignMemory, rootKey, STORAGE_BLOCK_SIZE * STORAGE_LUN_NBR), sizeof(*partitionsStructure));
 		// Check for data correctness
 		if (strcmp(partitionsStructure->checkSequence, CHECK_SEQUENCE) == 0) {
 			res = 0;
 		}
 	}
-					
 	return res;
 }
 
@@ -337,20 +343,13 @@ Partition getPartition() {
 	return partitionsStructure.partitions[partitionsStructure.currPartitionNumber];
 }
 
-BYTE* decryptPartitionMemory(BYTE *buff) {
-	if (getPartition().encryptionType == ENCRYPTED) {
-		// TODO: decryption
-		return buff;
-	}
+BYTE* decryptMemory(BYTE *buff, const char *key, const uint32_t size) {
 	return buff;
 }
 
-BYTE* encryptPartitionMemory(BYTE *buff) {
-	if (getPartition().encryptionType == ENCRYPTED) {
-		// TODO: ecryption
-		return buff;
-	}
+BYTE* encryptMemory(BYTE *buff, const char *key, const uint32_t size) {
 	return buff;
 }
+
 #endif /* _USE_IOCTL == 1 */
 
