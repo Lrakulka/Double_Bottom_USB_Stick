@@ -3,6 +3,7 @@
 #include "user_interface.h"
 #include "fatfs.h"
 #include "sd_io_controller.h"
+#include "usbd_core.h"
 
 #define COMMAND_FILE_NAME								"COMMAND_.TXT"
 #define COMMAND_FILE_NAME_FAILED				"COMMANDF.TXT"
@@ -32,8 +33,14 @@ FATFS SDFatFs;  										/* File system object for SD card logical drive */
 WORD commandFileLastModifDate = 0;		/* Last modified date of command file*/
 extern HAL_SD_CardInfoTypedef SDCardInfo;
 extern PartitionsStructure partitionsStructure;
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
 PartitionsStructure newConfStructure;
 
+/* The partition should be scanned for containing command file. 
+ * If you delete this check the infinity loop can be created by two commands files.
+*/
+uint8_t isPartitionScanned;						
 /* Private user intarface function prototypes -----------------------------------------------*/
 // Executes command
 void commandExecutor(void);
@@ -60,6 +67,8 @@ uint8_t initFatFsForPartiton() {
 	if(f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0) != FR_OK){    
 		res = 0;      
 	}
+	// Activation of the command file scan
+	isPartitionScanned = 0;
 	return res;
 }
 
@@ -67,6 +76,8 @@ void checkConfFiles() {
 	FRESULT res;
 	DIR dir;
 	static FILINFO fno;
+	
+	f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0);
 	
 	res = f_opendir(&dir, SD_Path);                       			/* Open the directory */
 	if (res == FR_OK) {
@@ -77,7 +88,11 @@ void checkConfFiles() {
 				// Is root dir contains command file
 				if (isNewCommandFile(&fno, COMMAND_FILE_NAME, &commandFileLastModifDate) == 0) {
 					commandFileLastModifDate = fno.ftime;
-					commandExecutor();
+					if (isPartitionScanned != 0) {
+						commandExecutor();
+					} else {
+						isPartitionScanned = 1;
+					}
 				} 
 			}
 		}
@@ -113,14 +128,14 @@ void commandExecutor(void) {
 					if ((strcmp(partitionsStructure.confKey, password) == 0))
 						f_close(&commandFile);
 						if (doShowConfig("wsgrsrg.txt", &partitionsStructure) != 0) {
-							// ----f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+							//-----f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 						}
 					break;
 				}
 				case UPDATE_ROOT_CONFIGURATIONS: {
 					if ((strcmp(partitionsStructure.confKey, password) == 0) 
 							&& (doRootConfig(buff, &bytesRead, &shiftPosition) == 0)) {
-						// ----f_unlink(PART_CONFIG_FILE_NAME);
+						f_unlink(COMMAND_FILE_NAME);
 					} else {
 						// f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 					}
@@ -129,7 +144,7 @@ void commandExecutor(void) {
 				case CHANGE_PARTITION: {
 					if ((strcmp(partitionsStructure.rootKey, password) == 0)
 						&& (doPartConfig(buff, &bytesRead, &shiftPosition) == 0)) {
-						// ----f_unlink(PART_CONFIG_FILE_NAME);
+						f_unlink(COMMAND_FILE_NAME);
 					} else {
 						// f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 					}
@@ -199,10 +214,12 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 	memset(partName, '\0', PART_NAME_LENGHT);
 	memset(partKey, '\0', PART_KEY_LENGHT);
 	uint8_t res = parsePartConfig(buff, bytesRead, shift, partName, partKey);
-	if (res == 0) {
+	if ((res == 0) && (USBD_Stop(&hUsbDeviceFS) == USBD_OK)) {
 		res = changePartition(partName, partKey);
 		if (res == 0) {
-			res = initFatFsForPartiton();
+			initFatFsForPartiton();			// initilization same times failed but continue to work correctly
+			HAL_Delay(2000);						// Time delay for host to recognize detachment of the stick
+			res = USBD_Start(&hUsbDeviceFS);	
 		}
 	}
 	return res;

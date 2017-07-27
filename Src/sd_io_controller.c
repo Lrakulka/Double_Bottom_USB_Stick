@@ -96,18 +96,18 @@ DSTATUS SD_status(BYTE lun)
   * @retval DRESULT: Operation result
   */
 DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count) {
-  DRESULT res = RES_OK;
+  DRESULT res = RES_ERROR;
   
 	DWORD shiftedSector = getPartitionSector(sector);
-	if (isPartitionContainsMemory(shiftedSector, count) 
-		|| (BSP_SD_ReadBlocks_DMA((uint32_t*) buff, 
+	if ((isPartitionContainsMemory(shiftedSector, count) == 0)
+		&& (BSP_SD_ReadBlocks_DMA((uint32_t*) buff, 
 					(uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
-					STORAGE_BLOCK_SIZE, count) != MSD_OK)) {
+					STORAGE_BLOCK_SIZE, count * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK)) {
 						
 		if (getPartition().encryptionType == ENCRYPTED) {
 			buff = decryptMemory(buff, getPartition().key, STORAGE_BLOCK_SIZE);
 		}
-		res = RES_ERROR;
+		res = RES_OK;
 	}
   
   return res;
@@ -124,17 +124,17 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count) {
 #if _USE_WRITE == 1
 DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
-  DRESULT res = RES_OK;
+  DRESULT res = RES_ERROR;
 	
 	DWORD shiftedSector = getPartitionSector(sector);
-  if (isPartitionContainsMemory(shiftedSector, count)
-		|| (BSP_SD_WriteBlocks_DMA(
+  if ((isPartitionContainsMemory(shiftedSector, count) == 0)
+		&& (BSP_SD_WriteBlocks_DMA(
 					(uint32_t*) (getPartition().encryptionType == ENCRYPTED ?
 							encryptMemory((BYTE*) buff, getPartition().key, STORAGE_BLOCK_SIZE) :	buff),
 					(uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
-					STORAGE_BLOCK_SIZE, count) != MSD_OK)) {
+					STORAGE_BLOCK_SIZE, count * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK)) {
 						
-		res = RES_ERROR;
+		res = RES_OK;
 	}
   
   return res;
@@ -250,7 +250,7 @@ uint8_t changePartition(const char *partName, const char *partKey) {
 	uint8_t res = 1;
 	for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
 		if (strcmp(partName, partitionsStructure.partitions[partNmb].name) == 0) {
-			partitionsStructure.currPartitionNumber = partNmb;
+			partitionsStructure.currPartitionNumber = partNmb;					
 			res = 0;
 			break;
 		}
@@ -277,7 +277,8 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
 	memcpy(alignMemory, partitionsStructure, sizeof(*partitionsStructure));
 	
 	if (BSP_SD_WriteBlocks_DMA((uint32_t*) encryptMemory(alignMemory, partitionsStructure->rootKey, STORAGE_BLOCK_SIZE), 
-			storageAddr, STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER) != MSD_OK) {
+			storageAddr, STORAGE_BLOCK_SIZE, 
+			STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) != MSD_OK) {
 		res = 1;
 	}
 	return res;
@@ -290,10 +291,10 @@ uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) 
 	BYTE alignMemory[memorySize];
 	
 	if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
-			STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER) == MSD_OK) {
+			STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK) {
 		memcpy((void*) partitionsStructure, 
 				decryptMemory(alignMemory, rootKey, STORAGE_BLOCK_SIZE * STORAGE_LUN_NBR), sizeof(*partitionsStructure));
-		// Check for data correctness
+		// Check data correctness
 		if (strcmp(partitionsStructure->checkSequence, CHECK_SEQUENCE) == 0) {
 			res = 0;
 		}
@@ -318,7 +319,7 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
 					}
 			blockUsed += partitionStructure->partitions[i].sectorNumber;
 		}
-	if (blockUsed > SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - STORAGE_SECTOR_NUMBER) {
+	if (blockUsed > SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_NUMBER) {
 		return 1;
 	}
 	return 0;
