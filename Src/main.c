@@ -101,12 +101,12 @@ int main(void)
   MX_TIM14_Init();
 
   /* USER CODE BEGIN 2 */
-	initControllerMemory();
-	//------
-	initFatFsForPartiton();
+  initControllerMemory();
+  //------
+  initFatFsForPartiton();
 
-	//-------
-	HAL_TIM_Base_Start_IT(&htim14);
+  //-------
+  HAL_TIM_Base_Start_IT(&htim14);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -116,10 +116,10 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+    HAL_Delay(500);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_Delay(500);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
   }
   /* USER CODE END 3 */
 
@@ -288,10 +288,10 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) 
 {
-	if (htim->Instance == TIM14) 
-	{
-		checkConfFiles();
-	}
+  if (htim->Instance == TIM14) 
+  {
+    checkConfFiles();
+  }
 }
 /* USER CODE END 4 */
 

@@ -97,13 +97,13 @@
 const int8_t  STORAGE_Inquirydata_FS[] = {/* 36 */
   
   /* LUN 0 */
-  0x00,		
-  0x80,		
-  0x02,		
+  0x00,    
+  0x80,    
+  0x02,    
   0x02,
   (STANDARD_INQUIRY_DATA_LEN - 5),
   0x00,
-  0x00,	
+  0x00,  
   0x00,
   'D', 'o', 'u', 'b', 'l', 'e', ' ', ' ', /* Manufacturer : 8 bytes */
   'B', 'o', 't', 't', 'o', 'm', ' ', ' ', /* Product      : 16 Bytes */
@@ -238,7 +238,7 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
-	return currentPartitionRead(buf, blk_addr, blk_len);
+  return currentPartitionRead(buf, blk_addr, blk_len);
   /* USER CODE END 6 */ 
 }
 
@@ -255,7 +255,7 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
-	return currentPartitionWrite(buf, blk_addr, blk_len);
+  return currentPartitionWrite(buf, blk_addr, blk_len);
   /* USER CODE END 7 */ 
 }
 
