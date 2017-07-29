@@ -4,6 +4,5 @@
 #include "ff_gen_drv.h"
 
 void checkConfFiles(void);
-uint8_t initFatFsForPartiton(void);
 
 #endif
