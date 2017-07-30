@@ -21,7 +21,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 PartitionsStructure partitionsStructure;
-Partition defaultPartition;
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
@@ -35,8 +34,8 @@ Partition getPartition(void);
 BYTE* decryptMemory(BYTE*, const char*, const uint32_t);
 BYTE* encryptMemory(BYTE*, const char*, const uint32_t);
 uint8_t checkNewPartitionsStructure(const PartitionsStructure*);
-uint8_t saveConf(const PartitionsStructure*, const Partition*);
-uint8_t loadConf(PartitionsStructure*, const char*, Partition*, const char*);
+uint8_t saveConf(const PartitionsStructure*);
+uint8_t loadConf(PartitionsStructure*, const char*);
 /* Private SD Card function prototypes -----------------------------------------------*/
 DSTATUS initRootPart(const char*);
 DSTATUS SD_initialize (BYTE);
@@ -241,9 +240,6 @@ DSTATUS initControllerMemory(void) {
     strcpy(partitionsStructure.confKey, "confKey");
     strcpy(partitionsStructure.rootKey, "rootKey");
     strcpy(partitionsStructure.checkSequence, CHECK_SEQUENCE);
-    
-    memcpy(&defaultPartition, &partitionsStructure.partitions[0], sizeof(defaultPartition));
-    strcpy(defaultPartition.name, DEVICE_NAME);
     //-------
     res = RES_OK;
   }
@@ -262,78 +258,48 @@ uint8_t changePartition(const char *partName, const char *partKey) {
   return res;
 }
 
-uint8_t setConf(const PartitionsStructure *newConf) {
+uint8_t setConf(const PartitionsStructure *newConf, PartitionsStructure *oldConf) {
   uint8_t res = checkNewPartitionsStructure(newConf);
   if (res == 0) {
-    partitionsStructure = *newConf;
-    partitionsStructure.isInitilized = INITIALIZED;
-    memcpy(&defaultPartition, &partitionsStructure.partitions[0], sizeof(defaultPartition));
-    strcpy(defaultPartition.name, DEVICE_NAME);
-    res = saveConf(&partitionsStructure, &defaultPartition);
+    *oldConf = *newConf;
+    oldConf->isInitilized = INITIALIZED;
+    res = saveConf(oldConf);
   }
   return res;
 }
 
 /* Private controller functions ---------------------------------------------------------*/
-uint8_t saveConf(const PartitionsStructure *partitionsStructure, const Partition *defaultPart) {
+uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
   uint8_t res = 0;
-  uint32_t memorySize = STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize;
-  uint32_t mainConfigSize = memorySize - SDCardInfo.CardBlockSize;
-  uint64_t storageAddr = SDCardInfo.CardCapacity - memorySize;
+  uint32_t memorySize = STORAGE_BLOCK_SIZE * STORAGE_SECTOR_NUMBER;
+  uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
   BYTE alignMemory[memorySize];
-  // Copy main configurations to align block of memory
   memcpy(alignMemory, partitionsStructure, sizeof(*partitionsStructure));
-  // Copy configurations of the default partition to last align block of memory
-  memcpy(alignMemory + mainConfigSize, defaultPart, sizeof(*defaultPart));
-  // Encrypt main configurations
-  encryptMemory(alignMemory, partitionsStructure->rootKey, mainConfigSize);
-  // Encrypt configurations of default partition
-  encryptMemory(alignMemory + mainConfigSize, UNIQUE_DEVICE_INDICATOR, SDCardInfo.CardBlockSize);
   
-  if (BSP_SD_WriteBlocks_DMA((uint32_t*) alignMemory, storageAddr, STORAGE_BLOCK_SIZE, 
-        memorySize / STORAGE_BLOCK_SIZE) != MSD_OK) {
+  if (BSP_SD_WriteBlocks_DMA((uint32_t*) encryptMemory(alignMemory, partitionsStructure->rootKey, STORAGE_BLOCK_SIZE), 
+      storageAddr, STORAGE_BLOCK_SIZE, 
+      STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) != MSD_OK) {
     res = 1;
   }
   return res;
 }
 
-uint8_t loadMainConf(PartitionsStructure *partitionsStructure, const char *rootKey) {
+uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) {
   uint8_t res = 1;
-  uint32_t memorySize = (STORAGE_SECTOR_NUMBER - 1) * SDCardInfo.CardBlockSize;
-  uint64_t storageAddr = SDCardInfo.CardCapacity - memorySize;
+  uint32_t memorySize = STORAGE_BLOCK_SIZE * STORAGE_SECTOR_NUMBER;
+  uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
   BYTE alignMemory[memorySize];
-  // Load memory with main configuration 
+  
   if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
-      STORAGE_BLOCK_SIZE, memorySize / STORAGE_BLOCK_SIZE) == MSD_OK) {
-    // Decrypt memory
-    decryptMemory(alignMemory, rootKey, memorySize);
-    // Get main configuration 
-    memcpy(partitionsStructure, alignMemory, sizeof(*partitionsStructure));
+      STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK) {
+    memcpy((void*) partitionsStructure, 
+        decryptMemory(alignMemory, rootKey, STORAGE_BLOCK_SIZE * STORAGE_LUN_NBR), sizeof(*partitionsStructure));
     // Check data correctness
     if (strcmp(partitionsStructure->checkSequence, CHECK_SEQUENCE) == 0) {
       res = 0;
     }
   }
   return res;
-}
-
-uint8_t loadDefaultConf(Partition *defaultPart, const char *defaultPartKey) {
-  uint8_t res = 1;
-  uint64_t storageAddr = SDCardInfo.CardCapacity - SDCardInfo.CardBlockSize;
-  BYTE alignMemory[SDCardInfo.CardBlockSize];
-  // Load memory with default partition configuration 
-  if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
-      STORAGE_BLOCK_SIZE, SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK) {
-    // Decrypt memory
-    decryptMemory(alignMemory, defaultPartKey, SDCardInfo.CardBlockSize);
-    // Get default partition configuration 
-    memcpy(defaultPart, alignMemory, sizeof(*defaultPart));
-    // Check data correctness
-    if (strcmp(defaultPart->name, DEVICE_NAME) == 0) {
-      res = 0;
-    }
-  }
-  return res;                  
 }
 
 uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructure) {

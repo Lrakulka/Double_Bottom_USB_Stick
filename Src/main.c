@@ -102,7 +102,10 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   initControllerMemory();
-  
+  //------
+  initFatFsForPartiton();
+
+  //-------
   HAL_TIM_Base_Start_IT(&htim14);
   /* USER CODE END 2 */
 
@@ -232,7 +235,7 @@ static void MX_DMA_Init(void)
   /* DMA2_Stream6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
-  
+
 }
 
 /** Configure pins as 

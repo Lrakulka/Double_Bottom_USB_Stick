@@ -6,26 +6,17 @@
 #include "ff_gen_drv.h"
 
 /* This sequence uses for correctness check after initialization of main partition structure*/
-#define CHECK_SEQUENCE                      "12d@fh%fbdfb6B37b=-!"
-/* This define should be unique for earch device. 
- * UNIQUE_DEVICE_INDICATOR uses for encryption of default partition config.
-*/
-#define UNIQUE_DEVICE_INDICATOR             "we23dcf!segf&dg?d3rf"
-/* This string uses for checking correctness of loading default partition configs*/
-#define DEVICE_NAME                         "TestProrotype"
+#define CHECK_SEQUENCE           "12d@fh%fbdfb6B37b=-!"
 
-#define CONF_KEY_LENGHT                     20
-#define PART_KEY_LENGHT                     20
-#define PART_NAME_LENGHT                    20
-#define ROOT_KEY_LENGHT                     40
-#define SHOW_CONF_KEY_LENGHT                20
+#define CONF_KEY_LENGHT          20
+#define PART_KEY_LENGHT          20
+#define PART_NAME_LENGHT         20
+#define ROOT_KEY_LENGHT          40
+#define SHOW_CONF_KEY_LENGHT     20
 
-#define MAX_PART_NUMBER                     10
+#define MAX_PART_NUMBER          10
 
-// Storage number of sectors for default zero partition
-#define STORAGE_DEFAULT_PART_SECTOR_NUMBER  1
-// Storage number of sectors for configurations
-#define STORAGE_SECTOR_NUMBER               2 + STORAGE_DEFAULT_PART_SECTOR_NUMBER  
+#define STORAGE_SECTOR_NUMBER    2
 
 #define PUBLIC_PARTITION_KEY    "public"
 // Partition encryption
@@ -72,5 +63,5 @@ int8_t currentPartitionMaxLun(void);
 int8_t currentPartitionRead(BYTE*, DWORD, UINT);
 int8_t currentPartitionWrite(BYTE*, DWORD, UINT);
 
-uint8_t setConf(const PartitionsStructure*);
+uint8_t setConf(const PartitionsStructure*, PartitionsStructure*);
 #endif
