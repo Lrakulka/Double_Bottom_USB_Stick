@@ -30,7 +30,7 @@ const static struct {
 
 /* Private varibles -----------------------------------------------*/
 FATFS SDFatFs;                        // File system object for SD card logical drive 
-WORD commandFileLastModifDate = 0;    // Last modified date of command file
+WORD commandFileLastModifTime = 0;    // Last modified time of command file
 extern HAL_SD_CardInfoTypedef SDCardInfo;
 extern PartitionsStructure partitionsStructure;
 extern USBD_HandleTypeDef hUsbDeviceFS;
@@ -78,8 +78,8 @@ void checkConfFiles() {
         }
         if (!(fno.fattrib & AM_DIR)) {                  // It is a file 
           // Is root dir contains command file
-          if (isNewCommandFile(&fno, COMMAND_FILE_NAME, &commandFileLastModifDate) == 0) {
-            commandFileLastModifDate = fno.ftime;
+          if (isNewCommandFile(&fno, COMMAND_FILE_NAME, &commandFileLastModifTime) == 0) {
+            commandFileLastModifTime = fno.ftime;
             if (isPartitionScanned != 0) {
               commandExecutor();
             }
@@ -96,7 +96,7 @@ void checkConfFiles() {
     isPartitionScanned = 0;
   }
   
-  f_mount(0, (TCHAR const*)SD_Path, 0);                 // Unmount
+//  f_mount(0, (TCHAR const*)SD_Path, 0);                 // Unmount
 }
 
 /* Private controller functions ---------------------------------------------------------*/
