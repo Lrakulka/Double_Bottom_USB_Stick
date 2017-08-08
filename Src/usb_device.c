@@ -53,7 +53,7 @@
 /* USB Device Core handle declaration */
 USBD_HandleTypeDef hUsbDeviceFS;
 
-/* init function */                
+/* init function */				        
 void MX_USB_DEVICE_Init(void)
 {
   /* Init Device Library,Add Supported Class and Start the library*/

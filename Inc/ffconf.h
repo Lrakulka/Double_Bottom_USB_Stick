@@ -41,7 +41,7 @@
   */
 
 #ifndef _FFCONF
-#define _FFCONF 32020  /* Revision ID */
+#define _FFCONF 32020	/* Revision ID */
 
 /*-----------------------------------------------------------------------------/
 / Additional user header to be used  
@@ -184,7 +184,7 @@
 /* Number of volumes (logical drives) to be used. */
 
 /* USER CODE BEGIN Volumes */  
-#define _STR_VOLUME_ID          0  /* 0:Use only 0-9 for drive ID, 1:Use strings for drive ID */
+#define _STR_VOLUME_ID          0	/* 0:Use only 0-9 for drive ID, 1:Use strings for drive ID */
 #define _VOLUME_STRS            "RAM","NAND","CF","SD1","SD2","USB1","USB2","USB3"
 /* _STR_VOLUME_ID option switches string volume ID feature.
 /  When _STR_VOLUME_ID is set to 1, also pre-defined strings can be used as drive
@@ -209,7 +209,7 @@
 /  to variable sector size and GET_SECTOR_SIZE command must be implemented to the
 /  disk_ioctl() function. */
 
-#define  _USE_TRIM      0
+#define	_USE_TRIM      0
 /* This option switches ATA-TRIM feature. (0:Disable or 1:Enable)
 /  To enable Trim feature, also CTRL_TRIM command should be implemented to the
 /  disk_ioctl() function. */
@@ -229,15 +229,15 @@
 / System Configurations
 /----------------------------------------------------------------------------*/
 
-#define _FS_NORTC  0
-#define _NORTC_MON  6
-#define _NORTC_MDAY  4
-#define _NORTC_YEAR  2015
+#define _FS_NORTC	0
+#define _NORTC_MON	6
+#define _NORTC_MDAY	4
+#define _NORTC_YEAR	2015
 /* The _FS_NORTC option switches timestamp feature. If the system does not have
 /  an RTC function or valid timestamp is not needed, set _FS_NORTC to 1 to disable
 /  the timestamp feature. All objects modified by FatFs will have a fixed timestamp
 /  defined by _NORTC_MON, _NORTC_MDAY and _NORTC_YEAR.
-/  When timestamp feature is enabled (_FS_NORTC  == 0), get_fattime() function need
+/  When timestamp feature is enabled (_FS_NORTC	== 0), get_fattime() function need
 /  to be added to the project to read current time form RTC. _NORTC_MON,
 /  _NORTC_MDAY and _NORTC_YEAR have no effect. 
 /  These options have no effect at read-only configuration (_FS_READONLY == 1). */

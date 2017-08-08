@@ -47,7 +47,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-#include "user_interface.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -60,6 +60,7 @@ TIM_HandleTypeDef htim14;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,12 +77,14 @@ static void MX_TIM14_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
 /* USER CODE END 0 */
 
 int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -102,8 +105,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   initControllerMemory();
-  
-  HAL_TIM_Base_Start_IT(&htim14);
+ // HAL_TIM_Base_Start_IT(&htim14);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,6 +115,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 
@@ -228,7 +231,7 @@ static void MX_DMA_Init(void)
   /* DMA2_Stream6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
-  
+
 }
 
 /** Configure pins as 
@@ -279,13 +282,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) 
-{
-  if (htim->Instance == TIM14) 
-  {
-    checkConfFiles();
-  }
-}
+
 /* USER CODE END 4 */
 
 /**

@@ -44,7 +44,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_storage_if.h"
 /* USER CODE BEGIN INCLUDE */
-#include "sd_io_controller.h" 
+#include "sd_io_controller.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -97,13 +97,13 @@
 const int8_t  STORAGE_Inquirydata_FS[] = {/* 36 */
   
   /* LUN 0 */
-  0x00,    
-  0x80,    
-  0x02,    
+  0x00,
+  0x80,
+  0x02,
   0x02,
   (STANDARD_INQUIRY_DATA_LEN - 5),
   0x00,
-  0x00,  
+  0x00,
   0x00,
   'D', 'o', 'u', 'b', 'l', 'e', ' ', ' ', /* Manufacturer : 8 bytes */
   'B', 'o', 't', 't', 'o', 'm', ' ', ' ', /* Product      : 16 Bytes */

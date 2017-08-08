@@ -190,7 +190,7 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd)
   case PCD_SPEED_FULL:
     speed = USBD_SPEED_FULL;    
     break;
-  
+	
   default:
     speed = USBD_SPEED_FULL;    
     break;    
@@ -290,7 +290,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
 { 
   /* Init USB_IP */
   if (pdev->id == DEVICE_FS) {
-  /* Link The driver to the stack */  
+  /* Link The driver to the stack */	
   hpcd_USB_OTG_FS.pData = pdev;
   pdev->pData = &hpcd_USB_OTG_FS; 
   
