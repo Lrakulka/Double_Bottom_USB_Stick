@@ -100,12 +100,12 @@ int main(void)
   MX_DMA_Init();
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
-  MX_USB_DEVICE_Init();
   MX_TIM14_Init();
 
   /* USER CODE BEGIN 2 */
   initControllerMemory();
   HAL_TIM_Base_Start_IT(&htim14);
+  MX_USB_DEVICE_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
