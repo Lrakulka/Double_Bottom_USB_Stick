@@ -25,7 +25,8 @@ PartitionsStructure partitionsStructure;
 static volatile DSTATUS Stat = STA_NOINIT;
 
 extern HAL_SD_CardInfoTypedef SDCardInfo;
-
+// Timer interrupt for command interrupt search
+extern TIM_HandleTypeDef htim14;
 /* Private controller function prototypes -----------------------------------------------*/
 // Operations with current partition
 DWORD getPartitionSector(DWORD);
@@ -36,6 +37,7 @@ BYTE* encryptMemory(BYTE*, const char*, const uint32_t);
 uint8_t checkNewPartitionsStructure(const PartitionsStructure*);
 uint8_t saveConf(const PartitionsStructure*);
 uint8_t loadConf(PartitionsStructure*, const char*);
+void resetTimerInerrupt(void);
 /* Private SD Card function prototypes -----------------------------------------------*/
 DSTATUS initRootPart(const char*);
 DSTATUS SD_initialize (BYTE);
@@ -152,7 +154,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
   DRESULT res = RES_ERROR;
-  SD_status(0);
+  //SD_status(0);
   if (Stat & STA_NOINIT) return RES_NOTRDY;
   
   switch (cmd)
@@ -189,34 +191,41 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 
 /* USB interface logic ---------------------------------------------------------*/
 int8_t currentPartitionCapacity(uint32_t *block_num, uint16_t *block_size) {
+	resetTimerInerrupt();
   *block_num = getPartition().sectorNumber;
   *block_size = STORAGE_BLOCK_SIZE;
   return USBD_OK;
 }
 
 int8_t currentPartitionRead(BYTE *buff, DWORD sector, UINT count) {
+	resetTimerInerrupt();
   return SD_read(STORAGE_LUN_NBR, buff, sector, count);
 }
 int8_t currentPartitionWrite(BYTE *buff, DWORD sector, UINT count) {
+	resetTimerInerrupt();
   return SD_write(STORAGE_LUN_NBR, buff, sector, count);
 }
 
 int8_t currentPartitionInit(void) {
+	resetTimerInerrupt();
   return USBD_OK;
 }
 
 int8_t currentPartitionisReady(void) {
+	resetTimerInerrupt();
   return USBD_OK;
 }
 
 int8_t currentPartitionIsWriteProtected(void) {
+	resetTimerInerrupt();
   return USBD_OK;
 }
   
 int8_t currentPartitionMaxLun(void) {
+	resetTimerInerrupt();
   return STORAGE_LUN_NBR;
 }
-
+//-------------------------------------------------------------------------------------------------
 // Controller partition logic
 DSTATUS initControllerMemory(void) {
   DSTATUS res = RES_ERROR;
@@ -351,5 +360,8 @@ BYTE* encryptMemory(BYTE *buff, const char *key, const uint32_t size) {
   return buff;
 }
 
+void resetTimerInerrupt(void) {
+	htim14.Instance->CNT = 0;
+}
 #endif /* _USE_IOCTL == 1 */
 
