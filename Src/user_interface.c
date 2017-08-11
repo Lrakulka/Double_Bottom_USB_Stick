@@ -233,12 +233,19 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 uint8_t parsePartConfig(const char *buff, const uint32_t *bytesRead, 
                         const uint32_t *shift, char *partName, char *partKey) {
   uint8_t res = 1;
-  
-  for (uint32_t j = *shift; j < *bytesRead; ++j) {
-    if (buff[j] == ' ') {
-      strncpy(partName, buff + *shift, j - *shift);
-      strncpy(partKey, buff + j + 1, *bytesRead - j - 1);
-      res = 0;
+  int8_t shiftEndOfLine;
+  for (uint32_t i = *shift; i < *bytesRead; ++i) {
+    if (buff[i] == ' ') {
+      strncpy(partName, buff + *shift, i - *shift);
+      for (uint32_t j = i + 1; j < *bytesRead; ++j) {
+				shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
+				if (shiftEndOfLine != -1) {
+					strncpy(partKey, buff + i + 1, j - i - 1);
+					//*shift = j + shiftEndOfLine + 1;
+		      res = 0;
+					break;
+				}
+			}
       break;
     }
   }
