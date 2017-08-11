@@ -152,7 +152,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
   DRESULT res = RES_ERROR;
-  
+  SD_status(0);
   if (Stat & STA_NOINIT) return RES_NOTRDY;
   
   switch (cmd)
