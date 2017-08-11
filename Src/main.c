@@ -105,7 +105,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   initControllerMemory();
- // HAL_TIM_Base_Start_IT(&htim14);
+  HAL_TIM_Base_Start_IT(&htim14);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -282,7 +282,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM14)
+  {
+    checkConfFiles();
+  }
+}
 /* USER CODE END 4 */
 
 /**
