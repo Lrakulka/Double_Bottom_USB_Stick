@@ -292,8 +292,6 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
   uint8_t size;
   char *end;
   char buffer[10];
-  // Set sequence
-  strcpy(newPartitionsStructure->checkSequence, CHECK_SEQUENCE);                  
   // Get password for configuration
   if (findWordBeforeSpace(buff, bytesRead, &start, &size) == 0) {
     strncpy(newPartitionsStructure->confKey, buff + start, size);    

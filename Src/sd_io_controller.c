@@ -239,7 +239,6 @@ DSTATUS initControllerMemory(void) {
     
     strcpy(partitionsStructure.confKey, "confKey");
     strcpy(partitionsStructure.rootKey, "rootKey");
-    strcpy(partitionsStructure.checkSequence, CHECK_SEQUENCE);
     //-------
     res = RES_OK;
   }
@@ -295,7 +294,7 @@ uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) 
     memcpy((void*) partitionsStructure, 
         decryptMemory(alignMemory, rootKey, STORAGE_BLOCK_SIZE * STORAGE_LUN_NBR), sizeof(*partitionsStructure));
     // Check data correctness
-    if (strcmp(partitionsStructure->checkSequence, CHECK_SEQUENCE) == 0) {
+    if (strcmp(partitionsStructure->rootKey, rootKey) == 0) {
       res = 0;
     }
   }

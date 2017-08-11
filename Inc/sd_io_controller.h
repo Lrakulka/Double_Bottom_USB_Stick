@@ -5,9 +5,6 @@
 
 #include "ff_gen_drv.h"
 
-/* This sequence uses for correctness check after initialization of main partition structure*/
-#define CHECK_SEQUENCE           "12d@fh%fbdfb6B37b=-!"
-
 #define CONF_KEY_LENGHT          20
 #define PART_KEY_LENGHT          20
 #define PART_NAME_LENGHT         20
@@ -47,7 +44,6 @@ typedef struct {
    InitStatus isInitilized;    
    char confKey[CONF_KEY_LENGHT];                   // Key for revealing the current configurations of the device
    char rootKey[ROOT_KEY_LENGHT];                   // General password to enter to hidden partitions
-   char checkSequence[sizeof(CHECK_SEQUENCE)];      // Uses for correctness check of decrypting
 } PartitionsStructure;
 
 extern Diskio_drvTypeDef  SD_Driver;
