@@ -44,14 +44,14 @@ typedef struct {
    Partition partitions[MAX_PART_NUMBER];
    uint8_t partitionsNumber;
    uint8_t currPartitionNumber;   
-   InitStatus isInitilized;    
+   InitStatus initializeStatus;    
    char confKey[CONF_KEY_LENGHT];                   // Key for revealing the current configurations of the device
    char rootKey[ROOT_KEY_LENGHT];                   // General password to enter to hidden partitions
 } PartitionsStructure;
 
 extern Diskio_drvTypeDef  SD_Driver;
 
-DSTATUS initControllerMemory(void);
+DSTATUS initSDCard(void);
 uint8_t changePartition(const char*, const char*);
 // Operations with current visible partition
 int8_t currentPartitionCapacity(uint32_t*, uint16_t*);
@@ -62,7 +62,8 @@ int8_t currentPartitionMaxLun(void);
 int8_t currentPartitionRead(BYTE*, DWORD, UINT);
 int8_t currentPartitionWrite(BYTE*, DWORD, UINT);
 
-uint8_t setConf(const PartitionsStructure*, PartitionsStructure*);
+uint8_t setConf(PartitionsStructure*, const PartitionsStructure*);
+uint8_t loadConf(PartitionsStructure*, const char*);
 
 uint8_t initStartConf(const char*);
 #endif

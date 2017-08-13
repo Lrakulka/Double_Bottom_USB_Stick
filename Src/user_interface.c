@@ -120,26 +120,31 @@ void executeCommandFile(void) {
   memset(password, '\0', SHOW_CONF_KEY_LENGHT);
 #endif
   uint32_t shiftPosition;																// Uses for the command file parsing
-  
+
   if ((f_open(&commandFile, COMMAND_FILE_NAME, FA_READ) == FR_OK) 
   		&& (f_read(&commandFile, buff, sizeof(buff), (UINT*) &bytesRead) == FR_OK)) {
     if (bytesRead != 0) {
     																										// Get root password and command from the command file
       getCommandAndPassword(buff, &bytesRead, &shiftPosition, &command, password);
       
+      																									// Load configurations
+      if ((partitionsStructure.initializeStatus == NOT_INITIALIZED)
+      		&& (loadConf(&partitionsStructure, password) != 0)) {
+      	return;
+      }
+      if (strcmp(partitionsStructure.rootKey, password) != 0) {	// If pass not matches then stop method execution
+      	return;
+      }
       switch (command) {																// Executor of the command
         case SHOW_ROOT_CONFIGURATIONS: {								// Shows current device configurations
-          if ((strcmp(partitionsStructure.confKey, password) == 0)) {
-            f_close(&commandFile);
-            if (doShowConfig(DEVICE_CONFIGS, &partitionsStructure) != 0) {
-              f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
-            }
-          }
+					f_close(&commandFile);
+					if (doShowConfig(DEVICE_CONFIGS, &partitionsStructure) != 0) {
+						f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+					}
           break;
         }
         case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
-          if ((strcmp(partitionsStructure.confKey, password) == 0) 
-              && (doRootConfig(buff, &bytesRead, &shiftPosition) == 0)) {
+          if (doRootConfig(buff, &bytesRead, &shiftPosition) == 0) {		// TODO: Rewrite doRootConfig to match partKey
             //--------f_unlink(COMMAND_FILE_NAME);
           } else {
             f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
@@ -147,8 +152,7 @@ void executeCommandFile(void) {
           break;
         }
         case CHANGE_PARTITION: {												// Changes current visible partition
-          if ((strcmp(partitionsStructure.rootKey, password) == 0)
-            && (doPartConfig(buff, &bytesRead, &shiftPosition) == 0)) {
+          if (doPartConfig(buff, &bytesRead, &shiftPosition) == 0) {
             //---------f_unlink(COMMAND_FILE_NAME);
           } else {
             f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
@@ -230,9 +234,9 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
        // Init new partition and scan it
       isPartitionScanned = 0;
       checkConfFiles();
-      HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
-      res = USBD_Start(&hUsbDeviceFS);  
     }
+    HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
+    res = USBD_Start(&hUsbDeviceFS);
   }
   return res;
 }
