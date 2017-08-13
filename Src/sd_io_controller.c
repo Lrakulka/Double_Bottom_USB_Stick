@@ -1,9 +1,9 @@
 /* This file overrides default middleware loggic in the file sd_diskio.c */
 
 /* Includes ------------------------------------------------------------------*/
+#include "sd_io_controller.h"
 #include <string.h>
 #include "ff_gen_drv.h"
-#include "sd_io_controller.h"
 #include "usbd_storage_if.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -185,8 +185,18 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff) {
 /* Return capacity of currently visible partition */
 int8_t currentPartitionCapacity(uint32_t *block_num, uint16_t *block_size) {
 	resetTimerInerrupt();
-  *block_num = getPartition().sectorNumber;
   *block_size = STORAGE_BLOCK_SIZE;
+  if (partitionsStructure.isInitilized == INITIALIZED) {
+  	*block_num = getPartition().sectorNumber;
+  } else {																														// If the configurations not initialized
+  	 FATFS *fs;
+  	 DWORD fre_clust;
+  	 if (f_getfree((TCHAR const*)SD_Path, &fre_clust, &fs) == FR_OK) {
+  		 *block_num = (fs->n_fatent - 2) * fs->csize * fs->ssize;				// Trying to get capacity by FatFs
+  	 } else {
+  		 *block_num = SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE - 1;// Get capacity of SD card
+  	 }
+  }
   return USBD_OK;
 }
 

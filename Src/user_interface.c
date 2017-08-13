@@ -1,7 +1,6 @@
+#include "user_interface.h"
 #include <string.h>
 #include <stdlib.h>
-#include "user_interface.h"
-#include "fatfs.h"
 #include "sd_io_controller.h"
 #include "usbd_core.h"
 

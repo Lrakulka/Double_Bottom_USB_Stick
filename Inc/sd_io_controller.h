@@ -4,6 +4,7 @@
 #define __SD_IO_CONT_H
 
 #include "ff_gen_drv.h"
+#include "fatfs.h"
 
 #define CONF_KEY_LENGHT          20
 #define PART_KEY_LENGHT          20
