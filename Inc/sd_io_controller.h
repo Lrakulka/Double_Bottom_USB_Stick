@@ -1,4 +1,4 @@
-/* This file overrides default middleware loggic in the file sd_diskio.h */
+/* This file overrides and extends default middleware logic of the file sd_diskio.h */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __SD_IO_CONT_H
 #define __SD_IO_CONT_H
@@ -16,6 +16,8 @@
 #define STORAGE_SECTOR_NUMBER    2
 
 #define PUBLIC_PARTITION_KEY    "public"
+
+#define DEVICE_UNIQUE_ID				"deviceUniqueID"		// Should be unique for each device
 // Partition encryption
 typedef enum {
   NOT_INITIALIZED = 0,  
@@ -32,8 +34,8 @@ typedef struct {
    DWORD startSector;
    DWORD lastSector;
    UINT sectorNumber;
-   char name[PART_NAME_LENGHT];                  // Partition name must be less than 21 symbols
-   char key[PART_KEY_LENGHT];                    // Partition key must be less than 21 symbols
+   char name[PART_NAME_LENGHT];                   	// Partition name must be less than 21 symbols
+   char key[PART_KEY_LENGHT];                   		// Partition key must be less than 21 symbols
    EncryptionType encryptionType;
 } Partition;
 
@@ -60,4 +62,6 @@ int8_t currentPartitionRead(BYTE*, DWORD, UINT);
 int8_t currentPartitionWrite(BYTE*, DWORD, UINT);
 
 uint8_t setConf(const PartitionsStructure*, PartitionsStructure*);
+
+uint8_t initStartConf(const char*);
 #endif

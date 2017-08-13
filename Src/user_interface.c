@@ -8,6 +8,8 @@
 #define COMMAND_FILE_NAME               "COMMAND_.TXT"
 #define COMMAND_FILE_NAME_FAILED        "COMMANDF.TXT"
 
+#define DEVICE_CONFIGS					        "CONFIGS_.TXT"
+
 #define COMMAND_MAX_LENGTH              10          
 
 // Partition encryption
@@ -28,14 +30,14 @@ const static struct {
     {SHOW_ROOT_CONFIGURATIONS,     "ShowConf"}
 };
 
-/* Private varibles -----------------------------------------------*/
+/* Private variables -----------------------------------------------*/
 FATFS SDFatFs;                        // File system object for SD card logical drive 
 WORD commandFileLastModifTime = 0;    // Last modified time of command file
 extern HAL_SD_CardInfoTypedef SDCardInfo;
 extern PartitionsStructure partitionsStructure;
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-PartitionsStructure newConfStructure;
+PartitionsStructure newConfStructure;	// Contains new configuration for the device
 
 /* The partition should be scanned for containing command file. 
  * If you delete this check the infinity loop can be created by two commands files.
@@ -43,7 +45,7 @@ PartitionsStructure newConfStructure;
 uint8_t isPartitionScanned;        
 /* Private user intarface function prototypes -----------------------------------------------*/
 // Executes command
-void commandExecutor(void);
+void executeCommandFile(void);
 // Command executors
 uint8_t doRootConfig(const char*, const uint32_t*, const uint32_t*);
 uint8_t doPartConfig(const char*, const uint32_t*, const uint32_t*);
@@ -56,18 +58,21 @@ void getCommandAndPassword(const char*, const uint32_t*, uint32_t*, Command*, ch
 int8_t isNewLineOrEnd(const char*, const uint32_t*, const uint32_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 uint8_t parseConfStructure(PartitionsStructure*);
-uint8_t isNewCommandFile(const FILINFO*, const char*, const WORD*);
+uint8_t isCommandFileUpdated(const FILINFO*, const char*, const WORD*);
 Command getCommand(char*);
 uint8_t scrollToLineEnd(const char*, const uint32_t*, uint32_t*);
 uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
-/* Public user intarface functions ---------------------------------------------------------*/
+/* Public user interface functions ---------------------------------------------------------*/
+/* Scan root directory of current visible partition for the command file
+ * Command file - the file that contains commands to device and have name COMMAND_FILE_NAME
+ */
 void checkConfFiles() {
   FRESULT res;
   DIR dir;
   FILINFO fno;
   
-  res = f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0);    // Mount file system  
+  res = f_mount(&SDFatFs, (TCHAR const*)SD_Path, 0);    // Mount and remount file system
   if (res == FR_OK) {
     res = f_opendir(&dir, SD_Path);                     // Open the directory 
     if (res == FR_OK) {
@@ -77,11 +82,11 @@ void checkConfFiles() {
           break;                                        // Break on error or end of dir 
         }
         if (!(fno.fattrib & AM_DIR)) {                  // It is a file 
-          // Is root dir contains command file
-          if (isNewCommandFile(&fno, COMMAND_FILE_NAME, &commandFileLastModifTime) == 0) {
-            commandFileLastModifTime = fno.ftime;
-            if (isPartitionScanned != 0) {
-              commandExecutor();
+          																							// Check for the command file
+          if (isCommandFileUpdated(&fno, COMMAND_FILE_NAME, &commandFileLastModifTime)) {
+            commandFileLastModifTime = fno.ftime;				// Remember time when the command file was updated
+            if (isPartitionScanned != 0) {							// First scan of root dir shouldn't executes commands
+            	executeCommandFile();
             }
           } 
         }
@@ -92,21 +97,21 @@ void checkConfFiles() {
   if (res == FR_OK) {
     isPartitionScanned = 1;                             // Partition scanned
   } else {
-    // Try to reinit file system in case of error
-    isPartitionScanned = 0;
+  	isPartitionScanned = 0;															// Try to reinit file system and try to scan again
   }
   
-//  f_mount(0, (TCHAR const*)SD_Path, 0);                 // Unmount
+  //f_mount(0, (TCHAR const*)SD_Path, 0);                 // Unmount
 }
 
 /* Private controller functions ---------------------------------------------------------*/
-void commandExecutor(void) {
-  FIL commandFile;      // File object
+/* Get command from the command file and executes it */
+void executeCommandFile(void) {
+  FIL commandFile;      																// File object
   char buff[1000];
-  uint32_t bytesRead;   // File write/read counts
-  Command command;
+  uint32_t bytesRead;   																// File write/read counts
+  Command command;																			// Command that should be executed
 #if ROOT_KEY_LENGHT > CONF_KEY_LENGHT && ROOT_KEY_LENGHT > SHOW_CONF_KEY_LENGHT
-  char password[ROOT_KEY_LENGHT];
+  char password[ROOT_KEY_LENGHT];												// Root password
   memset(password, '\0', ROOT_KEY_LENGHT);
 #elif CONF_KEY_LENGHT > ROOT_KEY_LENGHT && CONF_KEY_LENGHT > SHOW_CONF_KEY_LENGHT
   char password[CONF_KEY_LENGHT];
@@ -115,42 +120,43 @@ void commandExecutor(void) {
   char password[SHOW_CONF_KEY_LENGHT];
   memset(password, '\0', SHOW_CONF_KEY_LENGHT);
 #endif
-  uint32_t shiftPosition;
+  uint32_t shiftPosition;																// Uses for the command file parsing
   
   if ((f_open(&commandFile, COMMAND_FILE_NAME, FA_READ) == FR_OK) 
-    && (f_read(&commandFile, buff, sizeof(buff), &bytesRead) == FR_OK)) {
+  		&& (f_read(&commandFile, buff, sizeof(buff), (UINT*) &bytesRead) == FR_OK)) {
     if (bytesRead != 0) {
+    																										// Get root password and command from the command file
       getCommandAndPassword(buff, &bytesRead, &shiftPosition, &command, password);
       
-      switch (command) {
-        case SHOW_ROOT_CONFIGURATIONS: {
-          if ((strcmp(partitionsStructure.confKey, password) == 0))
+      switch (command) {																// Executor of the command
+        case SHOW_ROOT_CONFIGURATIONS: {								// Shows current device configurations
+          if ((strcmp(partitionsStructure.confKey, password) == 0)) {
             f_close(&commandFile);
-            if (doShowConfig("wsgrsrg.txt", &partitionsStructure) != 0) {
-              //-----f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+            if (doShowConfig(DEVICE_CONFIGS, &partitionsStructure) != 0) {
+              f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
             }
+          }
           break;
         }
-        case UPDATE_ROOT_CONFIGURATIONS: {
+        case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
           if ((strcmp(partitionsStructure.confKey, password) == 0) 
               && (doRootConfig(buff, &bytesRead, &shiftPosition) == 0)) {
             //--------f_unlink(COMMAND_FILE_NAME);
           } else {
-            // f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+            f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
           }
           break;
         }
-        case CHANGE_PARTITION: {
+        case CHANGE_PARTITION: {												// Changes current visible partition
           if ((strcmp(partitionsStructure.rootKey, password) == 0)
             && (doPartConfig(buff, &bytesRead, &shiftPosition) == 0)) {
             //---------f_unlink(COMMAND_FILE_NAME);
           } else {
-            // f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+            f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
           }
           break;
         }
         default: {
-          ;
           // do nothing
         }
       }
@@ -159,6 +165,7 @@ void commandExecutor(void) {
   f_close(&commandFile);
 }
 
+/* Transform string command to the relevant command */
 Command getCommand(char *command) {
   for (uint8_t i = 0;  i < sizeof (conversion) / sizeof (conversion[0]); ++i) {
     if (strcmp(command, conversion[i].str) == 0) {
@@ -168,8 +175,9 @@ Command getCommand(char *command) {
   return NO_COMMAND; 
 }
 
+/* Get command and root password */
 void getCommandAndPassword(const char *buff, const uint32_t *bytesRead, 
-                            uint32_t *shift, Command *command, char *password) {
+		uint32_t *shift, Command *command, char *password) {
   int8_t shiftEndOfLine;
   char commandS[COMMAND_MAX_LENGTH];
   memset(commandS, '\0', COMMAND_MAX_LENGTH);
@@ -231,7 +239,7 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 }
 
 uint8_t parsePartConfig(const char *buff, const uint32_t *bytesRead, 
-                        const uint32_t *shift, char *partName, char *partKey) {
+		const uint32_t *shift, char *partName, char *partKey) {
   uint8_t res = 1;
   int8_t shiftEndOfLine;
   for (uint32_t i = *shift; i < *bytesRead; ++i) {
@@ -267,7 +275,7 @@ uint8_t scrollToLineEnd(const char *buff, const uint32_t *bytesRead, uint32_t *s
 }
 
 uint8_t findWordBeforeSpace(const char *buff, const uint32_t *bytesRead,
-                            uint32_t *start, uint8_t *size) {
+		uint32_t *start, uint8_t *size) {
   uint8_t res = 1;
   for (uint32_t i = *start; i < *bytesRead; ++i) {
     if ((buff[i] != ' ') && (buff[i] != '\t')) {
@@ -286,7 +294,7 @@ uint8_t findWordBeforeSpace(const char *buff, const uint32_t *bytesRead,
 }
 
 uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, 
-                        const uint32_t *shift, PartitionsStructure *newPartitionsStructure) {
+		const uint32_t *shift, PartitionsStructure *newPartitionsStructure) {
   uint8_t res = 1;
   uint32_t start = *shift;
   uint8_t size;
@@ -316,7 +324,7 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
             strncpy(buffer, buff + start, size);    
             start += size;
             part = strtol(buffer, &end, 10); 
-            if (end == buffer || *end != '\0') {
+            if ((end == buffer) || (*end != '\0')) {
               break;
             }
             // Get partition name
@@ -352,11 +360,11 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
             strncpy(buffer, buff + start, size);
             start += size;
             newPartitionsStructure->partitions[part].sectorNumber = strtol(buffer, &end, 10); 
-            if (end == buffer || *end != '\0') {
+            if ((end == buffer) || (*end != '\0')) {
               break;
             }
-            newPartitionsStructure->partitions[part].lastSector = newPartitionsStructure->partitions[part].startSector 
-                + newPartitionsStructure->partitions[part].sectorNumber - 1;
+            newPartitionsStructure->partitions[part].lastSector = newPartitionsStructure->partitions[part]
+								.startSector + newPartitionsStructure->partitions[part].sectorNumber - 1;
             if (scrollToLineEnd(buff, bytesRead, &start) != 0) {
               break;
             }
@@ -387,6 +395,7 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
   return res;
 }
 
+/* Forms file that contains current device configurations */
 void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) {
   f_printf(fil, "%s\n", "-------Configurations of The Device---->To save changes please delete this line");
   f_printf(fil, "%s\n", conversion[1].str);      // Update to update configurations
@@ -413,19 +422,20 @@ void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) 
             SDCardInfo.CardCapacity / SDCardInfo.CardBlockSize - STORAGE_SECTOR_NUMBER);
 }
 
-
+/* Detects and of the line. Works with Windows and Unix line separators */
 int8_t isNewLineOrEnd(const char *buff, const uint32_t *position, const uint32_t *size) {
   int8_t shift = -1;
   
   if ((buff[*position] == '\r') || (buff[*position] == '\n') || (*size == *position + 1)) {
     shift = 0;
   }
-  if (buff[*position] == '\r' && buff[*position + 1] == '\n') {
+  if ((buff[*position] == '\r') && (buff[*position + 1] == '\n')) {
     shift = 1;
   }
   return shift;  
 }
 
-uint8_t isNewCommandFile(const FILINFO *fno, const char *fileName, const WORD *lastModifTime) {
-  return ((strcmp(fno->fname, fileName) == 0) && (fno->ftime != *lastModifTime)) ? 0 : 1;
+/* Return true if the command file was updated */
+uint8_t isCommandFileUpdated(const FILINFO *fno, const char *fileName, const WORD *lastModifTime) {
+  return ((strcmp(fno->fname, fileName) == 0) && (fno->ftime != *lastModifTime)) ? 1 : 0;
 }
