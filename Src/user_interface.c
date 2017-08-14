@@ -16,6 +16,7 @@ typedef enum {
   CHANGE_PARTITION = 0,  
   UPDATE_ROOT_CONFIGURATIONS,
   SHOW_ROOT_CONFIGURATIONS,
+	INIT_DEVICE_CONFIGURATIONS,
   // Add new commands here
   NO_COMMAND
 } Command;
@@ -26,7 +27,9 @@ const static struct {
 } conversion [] = {
     {CHANGE_PARTITION,            "ChangePart"},
     {UPDATE_ROOT_CONFIGURATIONS,  "UpdateConf"},
-    {SHOW_ROOT_CONFIGURATIONS,     "ShowConf"}
+    {SHOW_ROOT_CONFIGURATIONS,    "ShowConf"},
+		{INIT_DEVICE_CONFIGURATIONS,  "InitConf"}
+    // Add new commands here
 };
 
 /* Private variables -----------------------------------------------*/
@@ -62,6 +65,7 @@ Command getCommand(char*);
 uint8_t scrollToLineEnd(const char*, const uint32_t*, uint32_t*);
 uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
+void commandExecutionResult(uint8_t);
 /* Public user interface functions ---------------------------------------------------------*/
 /* Scan root directory of current visible partition for the command file
  * Command file - the file that contains commands to device and have name COMMAND_FILE_NAME
@@ -105,6 +109,7 @@ void checkConfFiles() {
 /* Private controller functions ---------------------------------------------------------*/
 /* Get command from the command file and executes it */
 void executeCommandFile(void) {
+	uint8_t res = 1;
   FIL commandFile;      																// File object
   char buff[1000];
   uint32_t bytesRead;   																// File write/read counts
@@ -126,43 +131,40 @@ void executeCommandFile(void) {
     if (bytesRead != 0) {
     																										// Get root password and command from the command file
       getCommandAndPassword(buff, &bytesRead, &shiftPosition, &command, password);
-      
+      																									// Init or Reinit the device with beginning settings
+      if ((command == INIT_DEVICE_CONFIGURATIONS)
+      		&& (strcmp(DEVICE_UNIQUE_ID, password) == 0)) {
+      	commandExecutionResult(initStartConf(password));
+      	return;
+      }
       																									// Load configurations
       if ((partitionsStructure.initializeStatus == NOT_INITIALIZED)
       		&& (loadConf(&partitionsStructure, password) != 0)) {
       	return;
       }
-      if (strcmp(partitionsStructure.rootKey, password) != 0) {	// If pass not matches then stop method execution
+    																										// If pass not matches then stop method execution
+      if (strcmp(partitionsStructure.rootKey, password) != 0) {
       	return;
       }
       switch (command) {																// Executor of the command
         case SHOW_ROOT_CONFIGURATIONS: {								// Shows current device configurations
 					f_close(&commandFile);
-					if (doShowConfig(DEVICE_CONFIGS, &partitionsStructure) != 0) {
-						f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
-					}
+					res = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
           break;
         }
         case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
-          if (doRootConfig(buff, &bytesRead, &shiftPosition) == 0) {		// TODO: Rewrite doRootConfig to match partKey
-            //--------f_unlink(COMMAND_FILE_NAME);
-          } else {
-            f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
-          }
+          res = doRootConfig(buff, &bytesRead, &shiftPosition);		// TODO: Rewrite doRootConfig to match partKey
           break;
         }
         case CHANGE_PARTITION: {												// Changes current visible partition
-          if (doPartConfig(buff, &bytesRead, &shiftPosition) == 0) {
-            //---------f_unlink(COMMAND_FILE_NAME);
-          } else {
-            f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
-          }
+          res = doPartConfig(buff, &bytesRead, &shiftPosition);
           break;
         }
         default: {
           // do nothing
         }
       }
+      commandExecutionResult(res);
     }    
   }
   f_close(&commandFile);
@@ -442,3 +444,13 @@ int8_t isNewLineOrEnd(const char *buff, const uint32_t *position, const uint32_t
 uint8_t isCommandFileUpdated(const FILINFO *fno, const char *fileName, const WORD *lastModifTime) {
   return ((strcmp(fno->fname, fileName) == 0) && (fno->ftime != *lastModifTime)) ? 1 : 0;
 }
+
+/* Delete the command file if operation was successful if else renamed it */
+void commandExecutionResult(uint8_t res) {
+	if (res == 0) {
+		//---------f_unlink(COMMAND_FILE_NAME);
+	} else {
+		f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+	}
+}
+

@@ -336,35 +336,30 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
 }
 
 /* Init starting configurations for device */
-uint8_t initStartConf(const char *deviceUniqueID) {
-	uint8_t res = 1;
-	// TODO: Finish method
-	if (strcmp(DEVICE_UNIQUE_ID, deviceUniqueID) == 0) {
-		PartitionsStructure partitionsStructure;
-		partitionsStructure.partitionsNumber = 2;
-		strcpy(partitionsStructure.partitions[0].name, "part0");
-		partitionsStructure.partitions[0].startSector = 0x0;
-		partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
-		partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector + 1;
+uint8_t initStartConf() {
+	PartitionsStructure partitionsStructure;
+	partitionsStructure.partitionsNumber = 2;
+	partitionsStructure.currPartitionNumber = 0;
+	strcpy(partitionsStructure.partitions[0].name, "part0");
+	partitionsStructure.partitions[0].startSector = 0x0;
+	partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
+	partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector + 1;
 
-		memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
-		memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
-		strcpy(partitionsStructure.partitions[1].name, "part1");
-		strcpy(partitionsStructure.partitions[1].key, "partKey");
-		partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
-		partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE
-				- STORAGE_SECTOR_NUMBER - 1;
-		partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector
-				- partitionsStructure.partitions[1].startSector + 1;
-		partitionsStructure.currPartitionNumber = 0;
+	memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
+	memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
+	strcpy(partitionsStructure.partitions[1].name, "part1");
+	strcpy(partitionsStructure.partitions[1].key, "partKey");
+	partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
+	partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE
+			- STORAGE_SECTOR_NUMBER - 1;
+	partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector
+			- partitionsStructure.partitions[1].startSector + 1;
 
-		strcpy(partitionsStructure.confKey, "confKey");
-		strcpy(partitionsStructure.rootKey, "rootKey");
+	strcpy(partitionsStructure.confKey, "confKey");
+	strcpy(partitionsStructure.rootKey, "rootKey");
 
-		partitionsStructure.initializeStatus = INITIALIZED;
-		res = saveConf(&partitionsStructure);
-	}
-  return res;
+	partitionsStructure.initializeStatus = INITIALIZED;
+	return saveConf(&partitionsStructure);
 }
 
 /* Return sector with respect of current visible partition */

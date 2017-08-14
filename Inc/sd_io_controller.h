@@ -65,5 +65,5 @@ int8_t currentPartitionWrite(BYTE*, DWORD, UINT);
 uint8_t setConf(PartitionsStructure*, const PartitionsStructure*);
 uint8_t loadConf(PartitionsStructure*, const char*);
 
-uint8_t initStartConf(const char*);
+uint8_t initStartConf();
 #endif
