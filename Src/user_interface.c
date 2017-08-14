@@ -66,6 +66,7 @@ uint8_t scrollToLineEnd(const char*, const uint32_t*, uint32_t*);
 uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 void commandExecutionResult(uint8_t);
+void getLine(const char*, const uint32_t*, uint32_t*, char*);
 /* Public user interface functions ---------------------------------------------------------*/
 /* Scan root directory of current visible partition for the command file
  * Command file - the file that contains commands to device and have name COMMAND_FILE_NAME
@@ -148,12 +149,18 @@ void executeCommandFile(void) {
       }
       switch (command) {																// Executor of the command
         case SHOW_ROOT_CONFIGURATIONS: {								// Shows current device configurations
+        	getLine(buff, &bytesRead, &shiftPosition, password);
 					f_close(&commandFile);
-					res = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
+					if (strcmp(partitionsStructure.confKey, password) == 0) {
+						res = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
+					}
           break;
         }
         case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
-          res = doRootConfig(buff, &bytesRead, &shiftPosition);		// TODO: Rewrite doRootConfig to match partKey
+        	getLine(buff, &bytesRead, &shiftPosition, password);
+        	if (strcmp(partitionsStructure.confKey, password) == 0) {
+        		res = doRootConfig(buff, &bytesRead, &shiftPosition);		// TODO: Rewrite doRootConfig to match partKey
+        	}
           break;
         }
         case CHANGE_PARTITION: {												// Changes current visible partition
@@ -183,29 +190,27 @@ Command getCommand(char *command) {
 /* Get command and root password */
 void getCommandAndPassword(const char *buff, const uint32_t *bytesRead, 
 		uint32_t *shift, Command *command, char *password) {
-  int8_t shiftEndOfLine;
   char commandS[COMMAND_MAX_LENGTH];
   memset(commandS, '\0', COMMAND_MAX_LENGTH);
+  *shift = 0;
+
+  getLine(buff, bytesRead, shift, commandS);											// Get command line text
+  getLine(buff, bytesRead, shift, password);											// Get password line text
   
-  for (uint32_t i = 0; i < *bytesRead; ++i) {
-    shiftEndOfLine = isNewLineOrEnd(buff, &i, bytesRead);
-    if (shiftEndOfLine != -1) {
-      strncpy(commandS, buff, i);
-      *shift = i + shiftEndOfLine + 1;
-      for (uint32_t j = *shift; j < *bytesRead; ++j) {
-        shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
-        if (shiftEndOfLine != -1) {
-          strncpy(password, buff + *shift, j - *shift - shiftEndOfLine + 1);
-          *shift = j + shiftEndOfLine + 1;
-          break;
-        }
-      }
-      break;
-    }
-  }
   *command = getCommand(commandS);
 }
 
+void getLine(const char *buff, const uint32_t *bytesRead, uint32_t *shift, char *line) {
+  int8_t shiftEndOfLine;
+	for (uint32_t j = *shift; j < *bytesRead; ++j) {
+		shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
+		if (shiftEndOfLine != -1) {
+			strncpy(line, buff + *shift, j - *shift - shiftEndOfLine + 1);
+			*shift = j + shiftEndOfLine + 1;
+			break;
+		}
+	}
+}
 uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t *shift) {
   uint8_t res = parseRootConfig(buff, bytesRead, shift, &newConfStructure);
   if (res == 0) {
@@ -404,6 +409,7 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
 void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) {
   f_printf(fil, "%s\n", "-------Configurations of The Device---->To save changes please delete this line");
   f_printf(fil, "%s\n", conversion[1].str);      // Update to update configurations
+  f_printf(fil, "%s\n", partitionsStructure->rootKey);
   f_printf(fil, "%s\n", partitionsStructure->confKey);
   // Configuration
   f_printf(fil, "%s <--- Key for revealing device configurations\n", partitionsStructure->confKey);
