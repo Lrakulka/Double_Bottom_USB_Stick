@@ -398,9 +398,11 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
   uint8_t res = 1;
   
   res = f_open(&configFile, fileName, FA_CREATE_ALWAYS | FA_WRITE);
-  if (res == FR_OK) {
+  if ((res == FR_OK) && (USBD_Stop(&hUsbDeviceFS) == USBD_OK)) {
     formConfFileText(&configFile, partitionsStructure);
     f_close(&configFile);
+    HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
+    res = USBD_Start(&hUsbDeviceFS);
   }
   return res;
 }
