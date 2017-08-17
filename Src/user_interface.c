@@ -211,6 +211,7 @@ void getLine(const char *buff, const uint32_t *bytesRead, uint32_t *shift, char 
 		}
 	}
 }
+
 uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t *shift) {
   uint8_t res = parseRootConfig(buff, bytesRead, shift, &newConfStructure);
   if (res == 0) {

@@ -348,7 +348,7 @@ uint8_t initStartConf() {
 	memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
 	memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
 	strcpy(partitionsStructure.partitions[1].name, "part1");
-	strcpy(partitionsStructure.partitions[1].key, "partKey");
+	strcpy(partitionsStructure.partitions[1].key, "part1Key");
 	partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
 	partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE
 			- STORAGE_SECTOR_NUMBER - 1;
