@@ -156,7 +156,7 @@ void executeCommandFile(void) {
         case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
         	getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
         	if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
-        		commandResult = doRootConfig(buff, &bytesRead, &shiftPosition);		// TODO: Rewrite doRootConfig to match partKey
+        		commandResult = doRootConfig(buff, &bytesRead, &shiftPosition);
         	}
           break;
         }
@@ -168,7 +168,9 @@ void executeCommandFile(void) {
           // do nothing
         }
       }
+      f_close(&commandFile);
       commandExecutionResult(commandResult);
+      return;
     }    
   }
   f_close(&commandFile);
@@ -400,7 +402,6 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
   return res;
 }
 
-      
 uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitionsStructure) {
   FIL configFile;    
   uint8_t res = 1;
@@ -466,7 +467,8 @@ void commandExecutionResult(uint8_t res) {
 	if (res == 0) {
 		//---------f_unlink(COMMAND_FILE_NAME);
 	} else {
-		f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+		res = f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 	}
+	res = f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 }
 
