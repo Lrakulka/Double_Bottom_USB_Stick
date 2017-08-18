@@ -254,7 +254,9 @@ DSTATUS initSDCard(void) {
 uint8_t changePartition(const char *partName, const char *partKey) {
   uint8_t res = 1;
   for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
-    if (strncmp(partName, partitionsStructure.partitions[partNmb].name, PART_NAME_LENGHT) == 0) {
+    if ((strncmp(partName, partitionsStructure.partitions[partNmb].name, PART_NAME_LENGHT) == 0)
+    		&& ((partitionsStructure.partitions[partNmb].encryptionType == NOT_ENCRYPTED)
+    				|| (strncmp(partKey, partitionsStructure.partitions[partNmb].key, PART_KEY_LENGHT) == 0))) {
       partitionsStructure.currPartitionNumber = partNmb;          
       res = 0;
       break;
@@ -344,6 +346,7 @@ uint8_t initStartConf() {
 	partitionsStructure.partitions[0].startSector = 0x0;
 	partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
 	partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector + 1;
+	partitionsStructure.partitions[0].encryptionType = NOT_ENCRYPTED;
 
 	memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
 	memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
@@ -354,6 +357,7 @@ uint8_t initStartConf() {
 			- STORAGE_SECTOR_NUMBER - 1;
 	partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector
 			- partitionsStructure.partitions[1].startSector + 1;
+	partitionsStructure.partitions[1].encryptionType = ENCRYPTED;
 
 	strcpy(partitionsStructure.confKey, "confKey");
 	strcpy(partitionsStructure.rootKey, "rootKey");
