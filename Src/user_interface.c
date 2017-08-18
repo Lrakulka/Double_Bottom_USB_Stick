@@ -45,7 +45,7 @@ PartitionsStructure newConfStructure;	// Contains new configuration for the devi
  * If you delete this check the infinity loop can be created by two commands files.
 */
 uint8_t isPartitionScanned;        
-/* Private user intarface function prototypes -----------------------------------------------*/
+/* Private user interface function prototypes -----------------------------------------------*/
 // Executes command
 void executeCommandFile(void);
 // Command executors
@@ -55,18 +55,18 @@ uint8_t doShowConfig(const char*, const PartitionsStructure*);
 // Parsers
 uint8_t parsePartConfig(const char*, const uint32_t*, const uint32_t*, char*, char*);
 uint8_t parseRootConfig(const char*, const uint32_t*, const uint32_t*, PartitionsStructure*);
-void getCommandAndPassword(const char*, const uint32_t*, uint32_t*, Command*, char*);
+void getCommand(const char*, const uint32_t*, uint32_t*, Command*);
+void getRootPassword(const char*, const uint32_t*, uint32_t*, char*);
 
 int8_t isNewLineOrEnd(const char*, const uint32_t*, const uint32_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 uint8_t parseConfStructure(PartitionsStructure*);
 uint8_t isCommandFileUpdated(const FILINFO*, const char*, const WORD*);
-Command getCommand(char*);
 uint8_t scrollToLineEnd(const char*, const uint32_t*, uint32_t*);
 uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 void commandExecutionResult(uint8_t);
-void getLine(const char*, const uint32_t*, uint32_t*, char*);
+void getLine(const char*, const uint32_t*, uint32_t*, char*, uint8_t);
 /* Public user interface functions ---------------------------------------------------------*/
 /* Scan root directory of current visible partition for the command file
  * Command file - the file that contains commands to device and have name COMMAND_FILE_NAME
@@ -110,31 +110,24 @@ void checkConfFiles() {
 /* Private controller functions ---------------------------------------------------------*/
 /* Get command from the command file and executes it */
 void executeCommandFile(void) {
-	uint8_t res = 1;
   FIL commandFile;      																// File object
   char buff[1000];
   uint32_t bytesRead;   																// File write/read counts
   Command command;																			// Command that should be executed
-#if ROOT_KEY_LENGHT > CONF_KEY_LENGHT && ROOT_KEY_LENGHT > SHOW_CONF_KEY_LENGHT
-  char password[ROOT_KEY_LENGHT];												// Root password
-  memset(password, '\0', ROOT_KEY_LENGHT);
-#elif CONF_KEY_LENGHT > ROOT_KEY_LENGHT && CONF_KEY_LENGHT > SHOW_CONF_KEY_LENGHT
-  char password[CONF_KEY_LENGHT];
-  memset(password, '\0', CONF_KEY_LENGHT);
-#else
-  char password[SHOW_CONF_KEY_LENGHT];
-  memset(password, '\0', SHOW_CONF_KEY_LENGHT);
-#endif
-  uint32_t shiftPosition;																// Uses for the command file parsing
+  char password[ROOT_KEY_LENGHT];
+  memset(password, '\0', COMMAND_MAX_LENGTH);
+  uint32_t shiftPosition = 0;														// Uses for the command file parsing
+	uint8_t commandResult = 1;
 
   if ((f_open(&commandFile, COMMAND_FILE_NAME, FA_READ) == FR_OK) 
   		&& (f_read(&commandFile, buff, sizeof(buff), (UINT*) &bytesRead) == FR_OK)) {
     if (bytesRead != 0) {
-    																										// Get root password and command from the command file
-      getCommandAndPassword(buff, &bytesRead, &shiftPosition, &command, password);
-      																									// Init or Reinit the device with beginning settings
+    																										// Get command and root password from the command file
+    	getCommand(buff, &bytesRead, &shiftPosition, &command);
+    	getRootPassword(buff, &bytesRead, &shiftPosition, password);
+      																									// Init or Reinit the device with previous settings
       if ((command == INIT_DEVICE_CONFIGURATIONS)
-      		&& (strcmp(DEVICE_UNIQUE_ID, password) == 0)) {
+      		&& (strncmp(DEVICE_UNIQUE_ID, password, ROOT_KEY_LENGHT) == 0)) {
       	commandExecutionResult(initStartConf(password));
       	return;
       }
@@ -144,68 +137,69 @@ void executeCommandFile(void) {
       	return;
       }
     																										// If pass not matches then stop method execution
-      if (strcmp(partitionsStructure.rootKey, password) != 0) {
+      if (strncmp(partitionsStructure.rootKey, password, ROOT_KEY_LENGHT) != 0) {
       	return;
       }
       switch (command) {																// Executor of the command
         case SHOW_ROOT_CONFIGURATIONS: {								// Shows current device configurations
-        	getLine(buff, &bytesRead, &shiftPosition, password);
+        	getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
 					f_close(&commandFile);
-					if (strcmp(partitionsStructure.confKey, password) == 0) {
-						res = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
+					if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
+						commandResult = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
 					}
           break;
         }
         case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
-        	getLine(buff, &bytesRead, &shiftPosition, password);
-        	if (strcmp(partitionsStructure.confKey, password) == 0) {
-        		res = doRootConfig(buff, &bytesRead, &shiftPosition);		// TODO: Rewrite doRootConfig to match partKey
+        	getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
+        	if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
+        		commandResult = doRootConfig(buff, &bytesRead, &shiftPosition);		// TODO: Rewrite doRootConfig to match partKey
         	}
           break;
         }
         case CHANGE_PARTITION: {												// Changes current visible partition
-          res = doPartConfig(buff, &bytesRead, &shiftPosition);
+        	commandResult = doPartConfig(buff, &bytesRead, &shiftPosition);
           break;
         }
         default: {
           // do nothing
         }
       }
-      commandExecutionResult(res);
+      commandExecutionResult(commandResult);
     }    
   }
   f_close(&commandFile);
 }
 
-/* Transform string command to the relevant command */
-Command getCommand(char *command) {
-  for (uint8_t i = 0;  i < sizeof (conversion) / sizeof (conversion[0]); ++i) {
-    if (strcmp(command, conversion[i].str) == 0) {
-         return conversion[i].command; 
-    }
-  }
-  return NO_COMMAND; 
-}
-
-/* Get command and root password */
-void getCommandAndPassword(const char *buff, const uint32_t *bytesRead, 
-		uint32_t *shift, Command *command, char *password) {
+/* Get command from the command file */
+void getCommand(const char *buff, const uint32_t *bytesRead, uint32_t *shift, Command *command) {
   char commandS[COMMAND_MAX_LENGTH];
   memset(commandS, '\0', COMMAND_MAX_LENGTH);
-  *shift = 0;
 
-  getLine(buff, bytesRead, shift, commandS);											// Get command line text
-  getLine(buff, bytesRead, shift, password);											// Get password line text
-  
-  *command = getCommand(commandS);
+  getLine(buff, bytesRead, shift, commandS, COMMAND_MAX_LENGTH);		// Get command line text
+  																															// Get command status
+  for (uint8_t i = 0;  i < sizeof (conversion) / sizeof (conversion[0]); ++i) {
+    if (strncmp(commandS, conversion[i].str, COMMAND_MAX_LENGTH) == 0) {
+    	*command = conversion[i].command;
+    	return;
+    }
+  }
+  *command = NO_COMMAND;
 }
 
-void getLine(const char *buff, const uint32_t *bytesRead, uint32_t *shift, char *line) {
+/* Get root password from the command file */
+void getRootPassword(const char *buff, const uint32_t *bytesRead, uint32_t *shift, char *password) {
+  getLine(buff, bytesRead, shift, password, ROOT_KEY_LENGHT);			// Get password line text
+}
+
+void getLine(const char *buff, const uint32_t *bytesRead, uint32_t *shift,
+						 char *line, uint8_t lineMaxSize) {
   int8_t shiftEndOfLine;
+  int8_t actLineSize;
 	for (uint32_t j = *shift; j < *bytesRead; ++j) {
 		shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
 		if (shiftEndOfLine != -1) {
-			strncpy(line, buff + *shift, j - *shift - shiftEndOfLine + 1);
+			actLineSize = j - *shift - shiftEndOfLine + 1;
+			strncpy(line, buff + *shift, actLineSize < lineMaxSize ? actLineSize : lineMaxSize);
 			*shift = j + shiftEndOfLine + 1;
 			break;
 		}
@@ -250,7 +244,7 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 }
 
 uint8_t parsePartConfig(const char *buff, const uint32_t *bytesRead, 
-		const uint32_t *shift, char *partName, char *partKey) {
+												const uint32_t *shift, char *partName, char *partKey) {
   uint8_t res = 1;
   int8_t shiftEndOfLine;
   for (uint32_t i = *shift; i < *bytesRead; ++i) {
@@ -352,7 +346,9 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead,
             start += size;
             // Set partition type (encrypted ot not)
             if ((part == 0) 
-                || (strcmp(newPartitionsStructure->partitions[part].key, PUBLIC_PARTITION_KEY) == 0)) {
+                || (strncmp(newPartitionsStructure->partitions[part].key,
+                		PUBLIC_PARTITION_KEY,
+										PART_KEY_LENGHT) == 0)) {
               newPartitionsStructure->partitions[part].encryptionType = NOT_ENCRYPTED;
             } else {
               newPartitionsStructure->partitions[part].encryptionType = ENCRYPTED;

@@ -254,7 +254,7 @@ DSTATUS initSDCard(void) {
 uint8_t changePartition(const char *partName, const char *partKey) {
   uint8_t res = 1;
   for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
-    if (strcmp(partName, partitionsStructure.partitions[partNmb].name) == 0) {
+    if (strncmp(partName, partitionsStructure.partitions[partNmb].name, PART_NAME_LENGHT) == 0) {
       partitionsStructure.currPartitionNumber = partNmb;          
       res = 0;
       break;
@@ -304,7 +304,7 @@ uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) 
   	decryptMemory(alignMemory, rootKey, STORAGE_BLOCK_SIZE * STORAGE_LUN_NBR);
     memcpy((void*) partitionsStructure, alignMemory, sizeof(*partitionsStructure));
     // Check data correctness
-    if (strcmp(partitionsStructure->rootKey, rootKey) == 0) {
+    if (strncmp(partitionsStructure->rootKey, rootKey, ROOT_KEY_LENGHT) == 0) {
       res = 0;
     }
   }
@@ -322,7 +322,8 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
     if ((partitionStructure->partitions[i].name[0] == '\0') 
       || (partitionStructure->partitions[i].key[0] == '\0')
       || ((partitionStructure->partitions[i].encryptionType == NOT_ENCRYPTED) 
-          && (strcmp(partitionStructure->partitions[i].key, PUBLIC_PARTITION_KEY) != 0))
+          && (strncmp(partitionStructure->partitions[i].key,
+          		PUBLIC_PARTITION_KEY, PART_KEY_LENGHT) != 0))
       || (partitionStructure->partitions[i].lastSector != partitionStructure->partitions[i].startSector 
           + partitionStructure->partitions[i].sectorNumber - 1)) {
             return 1;

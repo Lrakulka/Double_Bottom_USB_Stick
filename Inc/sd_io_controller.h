@@ -8,9 +8,8 @@
 
 #define CONF_KEY_LENGHT          20
 #define PART_KEY_LENGHT          20
-#define PART_NAME_LENGHT         20
 #define ROOT_KEY_LENGHT          40
-#define SHOW_CONF_KEY_LENGHT     20
+#define PART_NAME_LENGHT         20
 
 #define MAX_PART_NUMBER          10
 
@@ -18,7 +17,7 @@
 
 #define PUBLIC_PARTITION_KEY    "public"
 
-#define DEVICE_UNIQUE_ID				"deviceUniqueID"		// Should be unique for each device
+#define DEVICE_UNIQUE_ID				"deviceUniqueID"		// Should be unique for each device and fit in ROOT_KEY_LENGHT
 // Partition encryption
 typedef enum {
   NOT_INITIALIZED = 0,  
