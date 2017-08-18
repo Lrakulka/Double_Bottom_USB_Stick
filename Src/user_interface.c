@@ -58,6 +58,7 @@ uint8_t parseRootConfig(const char*, const uint32_t*, const uint32_t*, Partition
 void getCommand(const char*, const uint32_t*, uint32_t*, Command*);
 void getRootPassword(const char*, const uint32_t*, uint32_t*, char*);
 
+uint8_t initDeviceConf(void);
 int8_t isNewLineOrEnd(const char*, const uint32_t*, const uint32_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 uint8_t parseConfStructure(PartitionsStructure*);
@@ -67,6 +68,7 @@ uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
 void commandExecutionResult(uint8_t);
 void getLine(const char*, const uint32_t*, uint32_t*, char*, uint8_t);
+uint8_t changePartAndReinitUSB(const char*, const char*);
 /* Public user interface functions ---------------------------------------------------------*/
 /* Scan root directory of current visible partition for the command file
  * Command file - the file that contains commands to device and have name COMMAND_FILE_NAME
@@ -117,7 +119,7 @@ void executeCommandFile(void) {
   uint32_t bytesRead;   																// File write/read counts
   Command command;																			// Command that should be executed
   char password[ROOT_KEY_LENGHT];
-  memset(password, '\0', COMMAND_MAX_LENGTH);
+  memset(password, '\0', ROOT_KEY_LENGHT);
   uint32_t shiftPosition = 0;														// Uses for the command file parsing
 	uint8_t commandResult = 1;
 
@@ -130,7 +132,7 @@ void executeCommandFile(void) {
       																									// Init or Reinit the device with previous settings
       if ((command == INIT_DEVICE_CONFIGURATIONS)
       		&& (strncmp(DEVICE_UNIQUE_ID, password, ROOT_KEY_LENGHT) == 0)) {
-      	commandExecutionResult(initStartConf(password));
+      	commandExecutionResult(initDeviceConf());
       	return;
       }
       																									// Load configurations
@@ -170,6 +172,27 @@ void executeCommandFile(void) {
     }    
   }
   f_close(&commandFile);
+}
+
+/* Changed the visible partition and reinit USB connection */
+uint8_t changePartAndReinitUSB(const char *partName, const char *partKey) {
+	uint8_t res = 1;
+	if (USBD_Stop(&hUsbDeviceFS) == USBD_OK) {
+		res = changePartition(partName, partKey);
+		if (res == 0) {
+			// Init new partition and scan it
+			isPartitionScanned = 0;
+		}
+		HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
+		res = USBD_Start(&hUsbDeviceFS);
+	}
+	return res;
+}
+
+/* Init the device with beginning configurations */
+uint8_t initDeviceConf() {
+	initStartConf();
+	return changePartAndReinitUSB(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
 }
 
 /* Get command from the command file */
@@ -212,14 +235,8 @@ uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
   uint8_t res = parseRootConfig(buff, bytesRead, shift, &newConfStructure);
   if (res == 0) {
     res = setConf(&partitionsStructure, &newConfStructure);
-    if ((res == 0) && (USBD_Stop(&hUsbDeviceFS) == USBD_OK)) {
-      res = changePartition(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
-      if (res == 0) {
-        // Init new partition and scan it
-        isPartitionScanned = 0;
-      }
-      HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
-      res = USBD_Start(&hUsbDeviceFS);
+    if (res == 0) {
+      res = changePartAndReinitUSB(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
     }
   }
   return res;
@@ -231,14 +248,8 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
   memset(partName, '\0', PART_NAME_LENGHT);
   memset(partKey, '\0', PART_KEY_LENGHT);
   uint8_t res = parsePartConfig(buff, bytesRead, shift, partName, partKey);
-  if ((res == 0) && (USBD_Stop(&hUsbDeviceFS) == USBD_OK)) {
-    res = changePartition(partName, partKey);
-    if (res == 0) {
-       // Init new partition and scan it
-      isPartitionScanned = 0;
-    }
-    HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
-    res = USBD_Start(&hUsbDeviceFS);
+  if (res == 0) {
+  	res = changePartAndReinitUSB(partName, partKey);
   }
   return res;
 }
