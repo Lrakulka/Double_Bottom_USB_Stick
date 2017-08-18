@@ -338,7 +338,6 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
 
 /* Init starting configurations for device */
 uint8_t initStartConf() {
-	PartitionsStructure partitionsStructure;
 	partitionsStructure.partitionsNumber = 2;
 	partitionsStructure.currPartitionNumber = 0;
 	strcpy(partitionsStructure.partitions[0].name, "part0");

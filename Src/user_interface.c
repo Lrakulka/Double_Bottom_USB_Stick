@@ -11,6 +11,7 @@
 
 #define COMMAND_MAX_LENGTH              10          
 
+#define USB_REINIT_DELAY								2000
 // Partition encryption
 typedef enum {
   CHANGE_PARTITION = 0,  
@@ -61,7 +62,6 @@ void getRootPassword(const char*, const uint32_t*, uint32_t*, char*);
 uint8_t initDeviceConf(void);
 int8_t isNewLineOrEnd(const char*, const uint32_t*, const uint32_t*);
 void formConfFileText(FIL*, const PartitionsStructure*);
-uint8_t parseConfStructure(PartitionsStructure*);
 uint8_t isCommandFileUpdated(const FILINFO*, const char*, const WORD*);
 uint8_t scrollToLineEnd(const char*, const uint32_t*, uint32_t*);
 uint8_t findWordBeforeSpace(const char*, const uint32_t*, uint32_t*, uint8_t*);
@@ -149,7 +149,7 @@ void executeCommandFile(void) {
         	getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
 					f_close(&commandFile);
 					if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
-						commandResult = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
+							commandResult = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
 					}
           break;
         }
@@ -185,7 +185,7 @@ uint8_t changePartAndReinitUSB(const char *partName, const char *partKey) {
 			// Init new partition and scan it
 			isPartitionScanned = 0;
 		}
-		HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
+		HAL_Delay(USB_REINIT_DELAY);            // Time delay for host to recognize detachment of the stick
 		res = USBD_Start(&hUsbDeviceFS);
 	}
 	return res;
@@ -465,10 +465,11 @@ uint8_t isCommandFileUpdated(const FILINFO *fno, const char *fileName, const WOR
 /* Delete the command file if operation was successful if else renamed it */
 void commandExecutionResult(uint8_t res) {
 	if (res == 0) {
-		//---------f_unlink(COMMAND_FILE_NAME);
-	} else {
-		res = f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+#if	DEBUG_MOD == 0																	// If the operation was successful command file will be deleted
+		f_unlink(COMMAND_FILE_NAME);
+#endif
+	} else {																					// If the operation was not successful command file will be renamed
+		f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 	}
-	res = f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
 }
 
