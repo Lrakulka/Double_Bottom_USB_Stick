@@ -215,10 +215,9 @@ uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
       if (res == 0) {
         // Init new partition and scan it
         isPartitionScanned = 0;
-        checkConfFiles();
-        HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
-        res = USBD_Start(&hUsbDeviceFS);  
       }
+      HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
+      res = USBD_Start(&hUsbDeviceFS);
     }
   }
   return res;
@@ -235,7 +234,6 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
     if (res == 0) {
        // Init new partition and scan it
       isPartitionScanned = 0;
-      checkConfFiles();
     }
     HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
     res = USBD_Start(&hUsbDeviceFS);
