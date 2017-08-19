@@ -191,7 +191,7 @@ int8_t currentPartitionCapacity(uint32_t *block_num, uint16_t *block_size) {
   	 FATFS *fs;
   	 DWORD fre_clust;
   	 if (f_getfree((TCHAR const*)SD_Path, &fre_clust, &fs) == FR_OK) {
-  		 *block_num = (fs->n_fatent - 2) * fs->csize * fs->ssize;				// Trying to get capacity by FatFs
+  		 *block_num = (fs->n_fatent - 2) * fs->csize;				// Trying to get capacity by FatFs
   		 getPartition()->sectorNumber = *block_num;
   		 getPartition()->lastSector = *block_num - 1;
   	 } else {
