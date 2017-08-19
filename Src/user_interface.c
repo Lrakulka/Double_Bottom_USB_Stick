@@ -186,7 +186,7 @@ uint8_t changePartAndReinitUSB(const char *partName, const char *partKey) {
 			isPartitionScanned = 0;
 		}
 		HAL_Delay(USB_REINIT_DELAY);            // Time delay for host to recognize detachment of the stick
-		res = USBD_Start(&hUsbDeviceFS);
+		USBD_Start(&hUsbDeviceFS);
 	}
 	return res;
 }

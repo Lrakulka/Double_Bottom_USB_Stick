@@ -104,7 +104,6 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   initSDCard();
-  //initStartConf(DEVICE_UNIQUE_ID);		// First initialization
   HAL_TIM_Base_Start_IT(&htim14);
   MX_USB_DEVICE_Init();
   /* USER CODE END 2 */
