@@ -133,15 +133,18 @@ void executeCommandFile(void) {
       if ((command == INIT_DEVICE_CONFIGURATIONS)
       		&& (strncmp(DEVICE_UNIQUE_ID, password, ROOT_KEY_LENGHT) == 0)) {
       	commandExecutionResult(initDeviceConf());
+      	f_close(&commandFile);
       	return;
       }
       																									// Load configurations
       if ((partitionsStructure.initializeStatus == NOT_INITIALIZED)
       		&& (loadConf(&partitionsStructure, password) != 0)) {
+      	f_close(&commandFile);
       	return;
       }
     																										// If pass not matches then stop method execution
       if (strncmp(partitionsStructure.rootKey, password, ROOT_KEY_LENGHT) != 0) {
+      	f_close(&commandFile);
       	return;
       }
       switch (command) {																// Executor of the command

@@ -27,8 +27,8 @@ typedef enum {
 } InitStatus;
 
 typedef enum {
-  ENCRYPTED = 0,  
-  NOT_ENCRYPTED,
+  NOT_ENCRYPTED = 0,
+  ENCRYPTED,
   DECRYPTED
 } EncryptionType;
 
