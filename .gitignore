@@ -19,12 +19,9 @@
 *.l2p
 *.iex
 .#*
-*.elf.*
+*.elf
 *.tmp
 *.ftl*
-*.launch
-.cproject
 .target
 Debug/
-.settings/
 Middlewares/Third_Party/FatFs/src/drivers/sd_diskio.*
