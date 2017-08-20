@@ -7,6 +7,7 @@
 #include "fatfs.h"
 
 #define DEBUG_MOD									1									// if DEBUG_MOD != 0 the command file will not deleted
+#define CIPHER_MOD								1									// if CIPHER_MOD != 0 the cipher logic active
 
 #define CONF_KEY_LENGHT          20
 #define PART_KEY_LENGHT          20

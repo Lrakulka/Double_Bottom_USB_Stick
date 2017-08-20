@@ -119,9 +119,11 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count) {
     && (BSP_SD_ReadBlocks_DMA((uint32_t*) buff, 
           (uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
           STORAGE_BLOCK_SIZE, count * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK)) {
+#if	CIPHER_MOD == 0
   	if (getPartition()->encryptionType == ENCRYPTED) {
   		decryptMemory(buff, longPartXORkey, count * SDCardInfo.CardBlockSize);
   	}
+#endif
     res = RES_OK;
   }
   
@@ -141,9 +143,11 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count) {
   DRESULT res = RES_ERROR;
   
   DWORD shiftedSector = getPartitionSector(sector);
+#if	CIPHER_MOD == 0
   if (getPartition()->encryptionType == ENCRYPTED) {
   	encryptMemory((BYTE*) buff, longPartXORkey, count * SDCardInfo.CardBlockSize);
   }
+#endif
   if (isPartitionContainsMemorySectors(shiftedSector, count)
     && (BSP_SD_WriteBlocks_DMA((uint32_t*) buff,
           (uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
@@ -280,7 +284,9 @@ uint8_t changePartition(const char *partName, const char *partKey) {
     		&& ((partitionsStructure.partitions[partNmb].encryptionType == NOT_ENCRYPTED)
     				|| (strncmp(partKey, partitionsStructure.partitions[partNmb].key, PART_KEY_LENGHT) == 0))) {
       partitionsStructure.currPartitionNumber = partNmb;
+#if	CIPHER_MOD == 0
       createKeyWithSpecLength(getPartition()->key, longPartXORkey, STORAGE_BLOCK_SIZE);
+#endif
       res = 0;
       break;
     }
@@ -307,7 +313,9 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
   uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
   BYTE alignMemory[memorySize];
   memcpy(alignMemory, partitionsStructure, sizeof(*partitionsStructure));
+#if	CIPHER_MOD == 0
   encryptMemoryAES(alignMemory, partitionsStructure->rootKey, memorySize);
+#endif
   
   if (BSP_SD_WriteBlocks_DMA((uint32_t*) alignMemory,
       storageAddr, STORAGE_BLOCK_SIZE, 
@@ -327,7 +335,9 @@ uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) 
   
   if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
       STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK) {
+#if	CIPHER_MOD == 0
   	decryptMemoryAES(alignMemory, rootKey, memorySize);
+#endif
     memcpy((void*) &newConfStructure, alignMemory, sizeof(newConfStructure));
     // Check data correctness
     if (strncmp(newConfStructure.rootKey, rootKey, ROOT_KEY_LENGHT) == 0) {
