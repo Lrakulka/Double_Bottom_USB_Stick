@@ -1,5 +1,6 @@
 # Double Bottom USB Stick
 USB Stick that can conceal and encrypt its partitions. The project is completely student work. 
+
 The project meets all goals expectations and fully operational. However, during the development was proposed the improvements that were not implemented. We recommend to visit category [Future Improvements](https://github.com/Lrakulka/Double_Bottom_USB_Stick#future-improvements).
 
 [Google Summer of Code 2017](https://summerofcode.withgoogle.com/projects/#5177270082732032)
