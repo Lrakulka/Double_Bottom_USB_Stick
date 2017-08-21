@@ -9,6 +9,7 @@ Project Name: USB Flash Drive with possibility to conceal information (Double Bo
 Organization: Portland State University
 Mentor: Keith Packard
 
+The last commit during GSoC program .... Tag   ....
 # Project Brief
 The main goal of the project is the creation of a USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders and files will not be displayed if the USB drive is connected to a computer. The microcontroller of the Double Bottom USB Stick will carry the process of encryption and concealment of files and folders. 
 
