@@ -25,7 +25,7 @@ The only possibility to break protection will be physically reading of memory fr
 * FS USB 2.0 cable;
 * Micro SD 4 GB class 4, HC;
 * A large part of the project generated with help of STM32CubeMX v4.18 Firmware v1.14 ([Cube project file](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc));
-* For the project development I used TRUEStudio;
+* TRUEStudio was used for the project development;
 * Dependiaces: SDIO intarface, FS USB 2.0 Mass Storage Device intaface, [FatFS](http://elm-chan.org/fsw/ff/00index_e.html)
 # Board Schematic
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Sketch_bb-min.png)
