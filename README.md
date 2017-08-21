@@ -4,9 +4,13 @@ USB Stick that can conceal and encrypt its partitions. The project is completely
 The project meets all goals expectations and fully operational. However, during the development was proposed the improvements that were not implemented. We recommend to visit category [Future Improvements](https://github.com/Lrakulka/Double_Bottom_USB_Stick#future-improvements).
 
 [Google Summer of Code 2017](https://summerofcode.withgoogle.com/projects/#5177270082732032)
+
 Student: Oleksandr Borysov
+
 Project Name: USB Flash Drive with possibility to conceal information (Double Bottom USB Stick)
+
 Organization: Portland State University
+
 Mentor: Keith Packard
 
 The last commit during GSoC program .... Tag   ....
