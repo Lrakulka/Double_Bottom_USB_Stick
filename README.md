@@ -19,7 +19,7 @@ The only possibility to break protection will be physically reading of memory fr
 * SDIO Micro SD Card reader module;
 * FS USB 2.0 cable;
 * Micro SD 4 GB class 4, HC;
-* A large part of the project generated with help of STM32CubeMX ([Cube project file is Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc));
+* A large part of the project generated with help of STM32CubeMX v4.18 Firmware v1.14 ([Cube project file](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc));
 * For the project development I used TRUEStudio;
 * Dependiaces: SDIO intarface, FS USB 2.0 Mass Storage Device intaface, [FatFS](http://elm-chan.org/fsw/ff/00index_e.html)
 # Board Schematic
@@ -28,13 +28,13 @@ The only possibility to break protection will be physically reading of memory fr
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Project_Assembled.jpg)
 # Getting Started
 1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
-2) Download and install [µVision](http://www2.keil.com/mdk5/install/);
-3) Open project [Double_Bottom_USB_Stick.uvprojx](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/MDK-ARM/Double_Bottom_USB_Stick.uvprojx) with µVision;
-4) Proceed next steps to compile and load the project sketch on the board;
-![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Keil_uVision_Build_Load_Project.PNG)
-5) Press reset button on the board (Black right button) and observe blinking of the green led and appearance of the new mass storage device on the computer;
-6) Optional. Install [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html) and open Cube project [Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc) with project configurations.
-# Detail Images of the Project hardware
+2) Download and install [TRUEStudio](https://atollic.com/truestudio/);
+3) Clone the project or download zip file;
+4) Open TRUEStudio. Select File -> Import... -> General -> Existing Project into Workspace -> Press "Next >" button -> Browse to the project folder -> Select "Double_Bottom_USB_Stick" in the Project window -> Press "Finish";
+5) Connect to the PC the board;
+6) Select in the studio one of the project's files and press "Debug" (Green bug)
+7) Optional. Install [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html) and open Cube project [Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc) with the project configurations.
+# Detail Images of the Project
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Board.jpg)
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Card_Reader-And_MicroSD_Card.jpg)
 # Future Improvements
