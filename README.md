@@ -1,7 +1,7 @@
 # Double Bottom USB Stick
 USB Stick that can conceal and encrypt its partitions. **The project is 100% student work.** 
 
-The project meets all goals expectations and fully operational. However, during the development was proposed improvements that were not implemented. We recommend to visit category [Future Improvements](https://github.com/Lrakulka/Double_Bottom_USB_Stick#future-improvements).
+The project meets all goals and fully operational. However, during the development was proposed improvements that were not implemented. We recommend to visit category [Future Improvements](https://github.com/Lrakulka/Double_Bottom_USB_Stick#future-improvements).
 
 [Google Summer of Code 2017](https://summerofcode.withgoogle.com/projects/#5177270082732032)
 
@@ -15,9 +15,9 @@ Mentor: Keith Packard
 
 The last commit during GSoC program .... Tag   ....
 # Project Brief
-The main goal of the project is the creation of a USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders and files will not be displayed if the USB drive is connected to a computer. The microcontroller of the Double Bottom USB Stick will carry the process of encryption and concealment of files and folders. 
+The main goal of the project is the creation of USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders and files will not be displayed if the USB drive is connected to computer. The microcontroller of the Double Bottom USB Stick will carry the process of encryption and concealment of files and folders. 
 
-The only possibility to break protection will be physically reading of memory from the memory component and breaking the encryption algorithm.
+The only possibility to break protection is physically read a memory from the memory component and breaking the encryption algorithm.
 
 # Project Technologies And Hardware
 * Test board is NUCLEO [STM32F446RE](https://developer.mbed.org/platforms/ST-Nucleo-F446RE/);
@@ -38,12 +38,12 @@ The only possibility to break protection will be physically reading of memory fr
 6) Select in the studio one of the project's files and press "Debug" (Green bug)
 7) Optional. Install [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html) and open Cube project [Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc) with the project configurations.
 # How It Works
-The logic behind this project is to represent a part of SD Card memory as the solid memory of the device (Double Bottom USB Stick).
-The device present it's self as reqular USB Mass Storage Device and currently visible partition memory represents as USB Stick memory to the host. Zero partition is always public because of this partition displays when the device physically connected to the host. Also, this partition will be demonstrated to the user if connect SD Card without the device to the host. The partition divided into two categories public and private. The private partitions are encrypted/decrypted by XOR cipher on the fly by using the partition key. 
-The device configurations encryption/decryption by AES cipher at the saving/loading configurations to/from the SD Card, the root key used as the encryption/decryption key.
+The logic behind the device is to represent a part of SD Card memory as the solid memory of the device (Double Bottom USB Stick).
+The project present itself as regular USB Mass Storage Device (USB 2.0 Stick) and currently visible partition memory represents as USB Stick memory to the host. Zero partition is always public because this partition displays when the device physically connected to the host. Also, this partition will be demonstrated to the user if connect SD Card without the device to the host. The partitions divided into two categories: public and private. The private partitions are encrypted/decrypted by XOR cipher on the fly using the partition key. 
+The device configurations encryption/decryption by AES cipher at the saving/loading configurations to/from the SD Card using the root key.
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Current_Device_Memory_Allocation.PNG)
 # User Commands
-At this moment the device supports four commands:
+Currently, the device supports four commands:
 * Initializes device default configurations (```InitConf - INIT_DEVICE_CONFIGURATIONS```)
 * Changes currently visible partition (```ChangePart - CHANGE_PARTITION```)
 * Shows device configurations (```ShowConf - SHOW_ROOT_CONFIGURATIONS```)
@@ -55,7 +55,7 @@ Create in the root directory of the device a file with name ```COMMAND_.TXT - CO
 InitConf
 [Device Unique ID - DEVICE_UNIQUE_ID]
 ```
-If device ID is correct then the command file will be deleted and the device will reconnect connection with the host, if ID or command not correct no action will be executed.
+If device ID is correct then the command file will be deleted and the device will reconnect to the host, if ID or command not correct no action will be executed.
 
 ### ChangePart ###
 Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
@@ -64,7 +64,7 @@ ChangePart
 [Device root key]
 [Partition name] [Partition key]
 ```
-If root key, partition key and partition name are correct then the command file will be deleted and the device will reconnect connection with the host and switch the currently visible partition, if root key not correct no action will be executed, if the partition name or key is incorrect then the command file will be rename to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT``` (If the partition is public then You should write "public" as partition key.
+If root key, partition key and partition name are correct then the command file will be deleted and the device will reconnect to the host and switch the currently visible partition. If root key not correct no action will be executed. If the partition name or key is incorrect then the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT``` (If the partition is public then You should write "public" as partition key).
 
 ### ShowConf ###
 Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
@@ -73,7 +73,7 @@ ShowConf
 [Device root key]
 [Configurations key]
 ```
-If device root key and configuration key are correct then the command file will be deleted and the device will reconnect connection with the host and will create a file ```DEVICE_CONFIGS - CONFIGS_.TXT``` with the device configurations, if the root key or configuration key is not correct then no action will be executed.
+If device root key and configuration key are correct then the command file will be deleted and the device will reconnect to the host and will create a file ```DEVICE_CONFIGS - CONFIGS_.TXT``` with the device configurations. If the root key or configuration key is not correct then no action will be executed.
 
 ### UpdateConf ###
 Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
@@ -94,13 +94,13 @@ UpdateConf
 512                 <- Card block size	
 7744510             <- Card block sector number	
 ```
-Note: if write "public" as [New partition key] the partition will be Pablic. Also, you can delete partitions as well (Just delete it from the update configuration file).
+Note: if write "public" as [New partition key] the partition will be public. Also you can delete partitions as well (Just delete it from the update configuration file).
 
-If device's root key and configuration key are correct the command file will be deleted and the device will reconnect connection with the host and the device configurations will be updated, also the currently visible partition will be switched to partition 0, if the root key or configuration key is not correct then no action will be executed, if update operation feils with error the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+If device root key and configuration key are correct the command file will be deleted and the device will reconnect to the host and the device configurations will be updated, also the currently visible partition will be switched to partition 0. If the root key or configuration key is not correct then no action will be executed. If update operation fails with error the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
 
-Note: Any commands that failed with error during execution will force the device to rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+Note: Any commands that failed with error during execution will rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
 # Future Improvements
-At this moment each partition part of SD Card memory is allocated as a solid piece. This approach would be acceptable if the project used for the partition encryption AES but due to its performance cost the project uses XOR cipher. That is why the spreading memory of the each partition across the SD Card memory will increase the level of data protection. Also, the project should have a more complicated logic for the forming XOR long key.
+At this moment each partition part of SD Card memory is allocated as a solid piece. This approach would be acceptable if the project used for the partition encryption AES but due to its performance cost the device uses XOR cipher. That is why the spreading memory of the each partition across the SD Card memory will increase the level of data protection. Also, the logic for the forming XOR long key must be more complex to increase XOR cipher reliability.
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Future_Device_Memory_Allocation.png)
 # My Test Board
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Project_Assembled.jpg)
