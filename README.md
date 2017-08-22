@@ -39,10 +39,70 @@ The only possibility to break protection will be physically reading of memory fr
 5) Connect to the PC the board;
 6) Select in the studio one of the project's files and press "Debug" (Green bug)
 7) Optional. Install [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html) and open Cube project [Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc) with the project configurations.
-# Detail Images of the Project
+# How It Works
+![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Current_Device_Memory_Allocation.PNG)
+# User Commands
+At this moment the device supports four commands:
+* Initializes device default configurations (```InitConf - INIT_DEVICE_CONFIGURATIONS```)
+* Changes currently visible partition (```ChangePart - CHANGE_PARTITION```)
+* Shows device configurations (```ShowConf - SHOW_ROOT_CONFIGURATIONS```)
+* Updates device configurations (```UpdateConf - UPDATE_ROOT_CONFIGURATIONS```)
+
+### InitConf ###
+Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+```
+InitConf
+[Device Unique ID - DEVICE_UNIQUE_ID]
+```
+If device ID is correct then the command file will be deleted and the device will reconnect connection with the host, if ID or command not correct no action will be executed.
+
+### ChangePart ###
+Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+```
+ChangePart
+[Device root key]
+[Partition name] [Partition key]
+```
+If root key, partition key and partition name are correct then the command file will be deleted and the device will reconnect connection with the host and switch the currently visible partition, if root key not correct no action will be executed, if the partition name or key is incorrect then the command file will be rename to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT``` (If the partition is public then You should write "public" as partition key.
+
+### ShowConf ###
+Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+```
+ShowConf
+[Device root key]
+[Configurations key]
+```
+If device root key and configuration key are correct then the command file will be deleted and the device will reconnect connection with the host and will create a file ```DEVICE_CONFIGS - CONFIGS_.TXT``` with the device configurations, if the root key or configuration key is not correct then no action will be executed.
+
+### UpdateConf ###
+Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+```
+UpdateConf
+[Device root key]
+[Configurations key]
+[New configurations key] <--- Key for revealing device configurations
+[New device root key] <--- Root Key of the device
+#N___________Name___________Key___________Number of sectors
+0  part0                public               3872257   
+1  part1                part1Key             3870000  
+2  part2                part2Key             2000  
+3  part3                part3Key             253  
+[New partition number] [New partition name] [New partition key] [New partition memory size]
+-------------SD card available memory-------------
+3965190144          <- Card capacity memory	
+512                 <- Card block size	
+7744510             <- Card block sector number	
+```
+Note: if write "public" as [New partition key] the partition will be Pablic. Also, you can delete partitions as well (Just delete it from the update configuration file).
+
+If device's root key and configuration key are correct the command file will be deleted and the device will reconnect connection with the host and the device configurations will be updated, also the currently visible partition will be switched to partition 0, if the root key or configuration key is not correct then no action will be executed, if update operation feils with error the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+
+Note: Any commands that failed with error during execution will force the device to rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+# Future Improvements
+![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Future_Device_Memory_Allocation.png)
+# Detail Images of the Test Board
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Board.jpg)
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Card_Reader-And_MicroSD_Card.jpg)
-# Future Improvements
 # More
 The project [issues](https://github.com/Lrakulka/Double_Bottom_USB_Stick/issues) contains useful information related to the project
 
