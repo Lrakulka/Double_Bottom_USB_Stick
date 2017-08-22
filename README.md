@@ -29,8 +29,6 @@ The only possibility to break protection will be physically reading of memory fr
 * Dependiaces: SDIO intarface, FS USB 2.0 Mass Storage Device intaface, [FatFS](http://elm-chan.org/fsw/ff/00index_e.html)
 # Board Schematic
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Sketch_bb-min.png)
-# My Test Board
-![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Project_Assembled.jpg)
 # Getting Started
 1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
 2) Download and install [TRUEStudio](https://atollic.com/truestudio/);
@@ -40,6 +38,9 @@ The only possibility to break protection will be physically reading of memory fr
 6) Select in the studio one of the project's files and press "Debug" (Green bug)
 7) Optional. Install [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html) and open Cube project [Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc) with the project configurations.
 # How It Works
+The logic behind this project is to represent a part of SD Card memory as the solid memory of the device (Double Bottom USB Stick).
+The device present it's self as reqular USB Mass Storage Device and currently visible partition memory represents as USB Stick memory to the host. Zero partition is always public because of this partition displays when the device physically connected to the host. Also, this partition will be demonstrated to the user if connect SD Card without the device to the host. The partition divided into two categories public and private. The private partitions are encrypted/decrypted by XOR cipher on the fly by using the partition key. 
+The device configurations encryption/decryption by AES cipher at the saving/loading configurations to/from the SD Card, the root key used as the encryption/decryption key.
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Current_Device_Memory_Allocation.PNG)
 # User Commands
 At this moment the device supports four commands:
@@ -99,8 +100,10 @@ If device's root key and configuration key are correct the command file will be 
 
 Note: Any commands that failed with error during execution will force the device to rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
 # Future Improvements
+At this moment each partition part of SD Card memory is allocated as a solid piece. This approach would be acceptable if the project used for the partition encryption AES but due to its performance cost the project uses XOR cipher. That is why the spreading memory of the each partition across the SD Card memory will increase the level of data protection. Also, the project should have a more complicated logic for the forming XOR long key.
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Future_Device_Memory_Allocation.png)
-# Detail Images of the Test Board
+# My Test Board
+![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Project_Assembled.jpg)
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Board.jpg)
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Card_Reader-And_MicroSD_Card.jpg)
 # More
