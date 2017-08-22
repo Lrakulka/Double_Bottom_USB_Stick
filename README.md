@@ -1,5 +1,5 @@
 # Double Bottom USB Stick
-USB Stick that can conceal and encrypt its partitions. The project is completely student work. 
+USB Stick that can conceal and encrypt its partitions. **The project is 100% student work.** 
 
 The project meets all goals expectations and fully operational. However, during the development was proposed the improvements that were not implemented. We recommend to visit category [Future Improvements](https://github.com/Lrakulka/Double_Bottom_USB_Stick#future-improvements).
 
@@ -107,5 +107,4 @@ At this moment each partition part of SD Card memory is allocated as a solid pie
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Board.jpg)
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Card_Reader-And_MicroSD_Card.jpg)
 # More
-The project [issues](https://github.com/Lrakulka/Double_Bottom_USB_Stick/issues) contains useful information related to the project
-
+The project [issues](https://github.com/Lrakulka/Double_Bottom_USB_Stick/issues) contains useful information related to the project.
