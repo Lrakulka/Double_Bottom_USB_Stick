@@ -36,8 +36,8 @@
 #include "ff_gen_drv.h"
 #include "fatfs.h"
 // For debugging
-#define DEBUG_MOD									1									// if DEBUG_MOD != 0 the command file will not deleted
-#define CIPHER_MOD								1									// if CIPHER_MOD != 0 the cipher logic not active
+#define DEBUG_MOD                 0                  // if DEBUG_MOD != 0 the command file will not deleted
+#define CIPHER_MOD                1                  // if CIPHER_MOD != 0 the cipher logic not active
 
 #define CONF_KEY_LENGHT          20
 #define PART_KEY_LENGHT          20
@@ -51,7 +51,7 @@
 
 #define PUBLIC_PARTITION_KEY    "public"
 
-#define DEVICE_UNIQUE_ID				"deviceUniqueID"		// Should be unique for each device and fit in ROOT_KEY_LENGHT
+#define DEVICE_UNIQUE_ID        "deviceUniqueID"    // Should be unique for each device and fit in ROOT_KEY_LENGHT
 // Device configuration status
 typedef enum {
   NOT_INITIALIZED = 0,  
@@ -59,16 +59,16 @@ typedef enum {
 } InitStatus;
 // Partition encryption status
 typedef enum {
-  PUBLIC = 0,																				// Uses for public partitions
-  PRIVATE,																					// Uses for private partitions
+  PUBLIC = 0,                                        // Uses for public partitions
+  PRIVATE,                                          // Uses for private partitions
 } PartitionType;
 // Partition configurations
 typedef struct {
    DWORD startSector;
    DWORD lastSector;
    UINT sectorNumber;
-   char name[PART_NAME_LENGHT];                   	// Partition name must be less than 21 symbols
-   char key[PART_KEY_LENGHT];                   		// Partition key must be less than 21 symbols
+   char name[PART_NAME_LENGHT];                     // Partition name must be less than 21 symbols
+   char key[PART_KEY_LENGHT];                       // Partition key must be less than 21 symbols
    PartitionType partitionType;
 } Partition;
 // Device configurations

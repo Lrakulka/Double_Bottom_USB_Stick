@@ -37,17 +37,17 @@
 #define COMMAND_FILE_NAME               "COMMAND_.TXT"
 #define COMMAND_FILE_NAME_FAILED        "COMMANDF.TXT"
 
-#define DEVICE_CONFIGS					        "CONFIGS_.TXT"
+#define DEVICE_CONFIGS                  "CONFIGS_.TXT"
 
 #define COMMAND_MAX_LENGTH              10          
 
-#define USB_REINIT_DELAY								2000
+#define USB_REINIT_DELAY                2000
 // Supported user commands
 typedef enum {
   CHANGE_PARTITION = 0,  
   UPDATE_ROOT_CONFIGURATIONS,
   SHOW_ROOT_CONFIGURATIONS,
-	INIT_DEVICE_CONFIGURATIONS,
+  INIT_DEVICE_CONFIGURATIONS,
   // Add new commands here
   NO_COMMAND
 } Command;
@@ -59,18 +59,18 @@ const static struct {
     {CHANGE_PARTITION,            "ChangePart"},
     {UPDATE_ROOT_CONFIGURATIONS,  "UpdateConf"},
     {SHOW_ROOT_CONFIGURATIONS,    "ShowConf"},
-		{INIT_DEVICE_CONFIGURATIONS,  "InitConf"}
+    {INIT_DEVICE_CONFIGURATIONS,  "InitConf"}
     // Add new commands here
 };
 
 /* Private variables -----------------------------------------------*/
-FATFS SDFatFs;                        									// File system object for SD card logical drive
-WORD commandFileLastModifTime = 0;    									// Last modified time of command file
+FATFS SDFatFs;                                          // File system object for SD card logical drive
+WORD commandFileLastModifTime = 0;                      // Last modified time of command file
 extern HAL_SD_CardInfoTypedef SDCardInfo;
 extern PartitionsStructure partitionsStructure;
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-PartitionsStructure newConfStructure;										// Contains new configuration for the device
+PartitionsStructure newConfStructure;                   // Contains new configuration for the device
 
 /*
  * The partition should be scanned for containing command file.
@@ -105,7 +105,7 @@ uint8_t changePartAndReinitUSB(const char*, const char*);
 
 /*******************************************************************************
 * Description    : Scans root directory of the currently visible partition for the command file
-* 								 		Command file - the file that contains commands to device and have name COMMAND_FILE_NAME.
+*                      Command file - the file that contains commands to device and have name COMMAND_FILE_NAME.
 * Input          : None.
 * Output         : None.
 * Return         : None.
@@ -125,13 +125,13 @@ void checkConfFiles() {
           break;                                        // Break on error or end of dir 
         }
         if (!(fno.fattrib & AM_DIR)) {                  // It is a file 
-          																							// Check for the command file
+                                                        // Check for the command file
           if (isCommandFileUpdated(&fno, COMMAND_FILE_NAME, &commandFileLastModifTime)) {
-            commandFileLastModifTime = fno.ftime;				// Remember time when the command file was updated
-            if (isPartitionScanned != 0) {							// First scan of root dir shouldn't executes commands
-            	executeCommandFile();
+            commandFileLastModifTime = fno.ftime;       // Remember time when the command file was updated
+            if (isPartitionScanned != 0) {              // First scan of root dir shouldn't executes commands
+              executeCommandFile();
               f_closedir(&dir);
-            	return;
+              return;
             }
           } 
         }
@@ -142,7 +142,7 @@ void checkConfFiles() {
   if (res == FR_OK) {
     isPartitionScanned = 1;                             // Partition scanned
   } else {
-  	isPartitionScanned = 0;															// Try to reinit file system and try to scan again
+    isPartitionScanned = 0;                             // Try to reinit file system and try to scan again
   }
   
   //f_mount(0, (TCHAR const*)SD_Path, 0);                 // Unmount
@@ -157,57 +157,57 @@ void checkConfFiles() {
 * Return         : None.
 *******************************************************************************/
 void executeCommandFile() {
-  FIL commandFile;      																// File object
+  FIL commandFile;                                      // File object
   char buff[1000];
-  uint32_t bytesRead;   																// File write/read counts
-  Command command;																			// Command that should be executed
+  uint32_t bytesRead;                                   // File write/read counts
+  Command command;                                      // Command that should be executed
   char password[ROOT_KEY_LENGHT];
   memset(password, '\0', ROOT_KEY_LENGHT);
-  uint32_t shiftPosition = 0;														// Uses for the command file parsing
-	uint8_t commandResult = 1;
+  uint32_t shiftPosition = 0;                           // Uses for the command file parsing
+  uint8_t commandResult = 1;
 
   if ((f_open(&commandFile, COMMAND_FILE_NAME, FA_READ) == FR_OK) 
-  		&& (f_read(&commandFile, buff, sizeof(buff), (UINT*) &bytesRead) == FR_OK)) {
+      && (f_read(&commandFile, buff, sizeof(buff), (UINT*) &bytesRead) == FR_OK)) {
     if (bytesRead != 0) {
-    																										// Get command and root password from the command file
-    	getCommand(buff, &bytesRead, &shiftPosition, &command);
-    	getRootPassword(buff, &bytesRead, &shiftPosition, password);
-      																									// Init or Reinit the device with previous settings
+                                                        // Get command and root password from the command file
+      getCommand(buff, &bytesRead, &shiftPosition, &command);
+      getRootPassword(buff, &bytesRead, &shiftPosition, password);
+                                                        // Init or Reinit the device with previous settings
       if ((command == INIT_DEVICE_CONFIGURATIONS)
-      		&& (strncmp(DEVICE_UNIQUE_ID, password, ROOT_KEY_LENGHT) == 0)) {
-      	commandExecutionResult(initDeviceConf());
-      	f_close(&commandFile);
-      	return;
+          && (strncmp(DEVICE_UNIQUE_ID, password, ROOT_KEY_LENGHT) == 0)) {
+        commandExecutionResult(initDeviceConf());
+        f_close(&commandFile);
+        return;
       }
-      																									// Load configurations
+                                                        // Load configurations
       if ((partitionsStructure.initializeStatus == NOT_INITIALIZED)
-      		&& (loadConf(&partitionsStructure, password) != 0)) {
-      	f_close(&commandFile);
-      	return;
+          && (loadConf(&partitionsStructure, password) != 0)) {
+        f_close(&commandFile);
+        return;
       }
-    																										// If password not matches then stop method execution
+                                                        // If password not matches then stop method execution
       if (strncmp(partitionsStructure.rootKey, password, ROOT_KEY_LENGHT) != 0) {
-      	f_close(&commandFile);
-      	return;
+        f_close(&commandFile);
+        return;
       }
-      switch (command) {																// Executor of the command
-        case SHOW_ROOT_CONFIGURATIONS: {								// Shows current device configurations
-        	getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
-					f_close(&commandFile);
-					if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
-							commandResult = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
-					}
+      switch (command) {                                // Executor of the command
+        case SHOW_ROOT_CONFIGURATIONS: {                // Shows current device configurations
+          getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
+          f_close(&commandFile);
+          if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
+              commandResult = doShowConfig(DEVICE_CONFIGS, &partitionsStructure);
+          }
           break;
         }
-        case UPDATE_ROOT_CONFIGURATIONS: {							// Updates the device configurations
-        	getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
-        	if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
-        		commandResult = doRootConfig(buff, &bytesRead, &shiftPosition);
-        	}
+        case UPDATE_ROOT_CONFIGURATIONS: {              // Updates the device configurations
+          getLine(buff, &bytesRead, &shiftPosition, password, sizeof(password));
+          if (strncmp(partitionsStructure.confKey, password, CONF_KEY_LENGHT) == 0) {
+            commandResult = doRootConfig(buff, &bytesRead, &shiftPosition);
+          }
           break;
         }
-        case CHANGE_PARTITION: {												// Changes current visible partition
-        	commandResult = doPartConfig(buff, &bytesRead, &shiftPosition);
+        case CHANGE_PARTITION: {                        // Changes current visible partition
+          commandResult = doPartConfig(buff, &bytesRead, &shiftPosition);
           break;
         }
         default: {
@@ -225,22 +225,22 @@ void executeCommandFile() {
 /*******************************************************************************
 * Description    : Changed visible partition and reinit USB connection
 * Input          : partName - name of the partition to be set visible
-* 								 partKey - key of the partition to be set visible.
+*                  partKey - key of the partition to be set visible.
 * Output         : None.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
 uint8_t changePartAndReinitUSB(const char *partName, const char *partKey) {
-	uint8_t res = 1;
-	if (USBD_Stop(&hUsbDeviceFS) == USBD_OK) {
-		res = changePartition(partName, partKey);
-		if (res == 0) {
-			// Init new partition and scan it
-			isPartitionScanned = 0;
-		}
-		HAL_Delay(USB_REINIT_DELAY);            // Time delay for host to recognize detachment of the stick
-		USBD_Start(&hUsbDeviceFS);
-	}
-	return res;
+  uint8_t res = 1;
+  if (USBD_Stop(&hUsbDeviceFS) == USBD_OK) {
+    res = changePartition(partName, partKey);
+    if (res == 0) {
+      // Init new partition and scan it
+      isPartitionScanned = 0;
+    }
+    HAL_Delay(USB_REINIT_DELAY);            // Time delay for host to recognize detachment of the stick
+    USBD_Start(&hUsbDeviceFS);
+  }
+  return res;
 }
 
 /*******************************************************************************
@@ -250,15 +250,15 @@ uint8_t changePartAndReinitUSB(const char *partName, const char *partKey) {
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
 uint8_t initDeviceConf() {
-	initStartConf();
-	return changePartAndReinitUSB(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
+  initStartConf();
+  return changePartAndReinitUSB(partitionsStructure.partitions[0].name, partitionsStructure.partitions[0].key);
 }
 
 /*******************************************************************************
 * Description    : Gets user command from the command file
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of user command.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of user command.
 * Output         : command - user command.
 * Return         : None.
 *******************************************************************************/
@@ -266,12 +266,12 @@ void getCommand(const char *buff, const uint32_t *bytesRead, uint32_t *shift, Co
   char commandS[COMMAND_MAX_LENGTH];
   memset(commandS, '\0', COMMAND_MAX_LENGTH);
 
-  getLine(buff, bytesRead, shift, commandS, COMMAND_MAX_LENGTH);		// Get command line text
-  																															// Get command status
+  getLine(buff, bytesRead, shift, commandS, COMMAND_MAX_LENGTH);    // Get command line text
+                                                                    // Get command status
   for (uint8_t i = 0;  i < sizeof (conversion) / sizeof (conversion[0]); ++i) {
     if (strncmp(commandS, conversion[i].str, COMMAND_MAX_LENGTH) == 0) {
-    	*command = conversion[i].command;
-    	return;
+      *command = conversion[i].command;
+      return;
     }
   }
   *command = NO_COMMAND;
@@ -280,43 +280,43 @@ void getCommand(const char *buff, const uint32_t *bytesRead, uint32_t *shift, Co
 /*******************************************************************************
 * Description    : Gets root password from the command file.
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : password - root password.
 * Return         : None.
 *******************************************************************************/
 void getRootPassword(const char *buff, const uint32_t *bytesRead, uint32_t *shift, char *password) {
-  getLine(buff, bytesRead, shift, password, ROOT_KEY_LENGHT);			// Get password line text
+  getLine(buff, bytesRead, shift, password, ROOT_KEY_LENGHT);      // Get password line text
 }
 
 /*******************************************************************************
 * Description    : Gets line from the command file.
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position of the line in the file
-* 								 lineMaxSize - max length of the line.
+*                  bytesRead - byte size of the command file
+*                  shift - position of the line in the file
+*                  lineMaxSize - max length of the line.
 * Output         : line - the file line or part of the file line(depends on lineMaxSize).
 * Return         : None.
 *******************************************************************************/
 void getLine(const char *buff, const uint32_t *bytesRead, uint32_t *shift, char *line, uint8_t lineMaxSize) {
   int8_t shiftEndOfLine;
   int8_t actLineSize;
-	for (uint32_t j = *shift; j < *bytesRead; ++j) {
-		shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
-		if (shiftEndOfLine != -1) {
-			actLineSize = j - *shift - shiftEndOfLine + 1;
-			strncpy(line, buff + *shift, actLineSize < lineMaxSize ? actLineSize : lineMaxSize);
-			*shift = j + shiftEndOfLine + 1;
-			break;
-		}
-	}
+  for (uint32_t j = *shift; j < *bytesRead; ++j) {
+    shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
+    if (shiftEndOfLine != -1) {
+      actLineSize = j - *shift - shiftEndOfLine + 1;
+      strncpy(line, buff + *shift, actLineSize < lineMaxSize ? actLineSize : lineMaxSize);
+      *shift = j + shiftEndOfLine + 1;
+      break;
+    }
+  }
 }
 
 /*******************************************************************************
 * Description    : Executes realization of UPDATE_ROOT_CONFIGURATIONS command
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : None.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
@@ -334,8 +334,8 @@ uint8_t doRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 /*******************************************************************************
 * Description    : Executes realization of CHANGE_PARTITION command
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : None.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
@@ -346,7 +346,7 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
   memset(partKey, '\0', PART_KEY_LENGHT);
   uint8_t res = parsePartConfig(buff, bytesRead, shift, partName, partKey);
   if (res == 0) {
-  	res = changePartAndReinitUSB(partName, partKey);
+    res = changePartAndReinitUSB(partName, partKey);
   }
   return res;
 }
@@ -354,28 +354,28 @@ uint8_t doPartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t
 /*******************************************************************************
 * Description    : Gets name and key of the partition
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : partName - the partition name
-* 								 partKey - the partition key.
+*                  partKey - the partition key.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
 uint8_t parsePartConfig(const char *buff, const uint32_t *bytesRead, const uint32_t *shift,
-		char *partName, char *partKey) {
+    char *partName, char *partKey) {
   uint8_t res = 1;
   int8_t shiftEndOfLine;
   for (uint32_t i = *shift; i < *bytesRead; ++i) {
     if (buff[i] == ' ') {
       strncpy(partName, buff + *shift, i - *shift);
       for (uint32_t j = i + 1; j < *bytesRead; ++j) {
-				shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
-				if (shiftEndOfLine != -1) {
-					strncpy(partKey, buff + i + 1, j - i - 1);
-					//*shift = j + shiftEndOfLine + 1;
-		      res = 0;
-					break;
-				}
-			}
+        shiftEndOfLine = isNewLineOrEnd(buff, &j, bytesRead);
+        if (shiftEndOfLine != -1) {
+          strncpy(partKey, buff + i + 1, j - i - 1);
+          //*shift = j + shiftEndOfLine + 1;
+          res = 0;
+          break;
+        }
+      }
       break;
     }
   }
@@ -385,8 +385,8 @@ uint8_t parsePartConfig(const char *buff, const uint32_t *bytesRead, const uint3
 /*******************************************************************************
 * Description    : Finds position of the line end
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : None.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
@@ -407,8 +407,8 @@ uint8_t scrollToLineEnd(const char *buff, const uint32_t *bytesRead, uint32_t *s
 /*******************************************************************************
 * Description    : Finds size of the word. Space is words separator.
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : size - the size of the word.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
@@ -433,13 +433,13 @@ uint8_t findWordBeforeSpace(const char *buff, const uint32_t *bytesRead, uint32_
 /*******************************************************************************
 * Description    : Parsers the file with new device configurations
 * Input          : buff - the command file
-* 								 bytesRead - byte size of the command file
-* 								 shift - position to start search of root password.
+*                  bytesRead - byte size of the command file
+*                  shift - position to start search of root password.
 * Output         : newPartitionsStructure - converted new device configurations.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
 uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, const uint32_t *shift,
-		PartitionsStructure *newPartitionsStructure) {
+    PartitionsStructure *newPartitionsStructure) {
   uint8_t res = 1;
   uint32_t start = *shift;
   uint8_t size;
@@ -487,8 +487,8 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, const uint3
             // Set partition type (encrypted ot not)
             if ((part == 0) 
                 || (strncmp(newPartitionsStructure->partitions[part].key,
-                		PUBLIC_PARTITION_KEY,
-										PART_KEY_LENGHT) == 0)) {
+                    PUBLIC_PARTITION_KEY,
+                    PART_KEY_LENGHT) == 0)) {
               newPartitionsStructure->partitions[part].partitionType = PUBLIC;
             } else {
               newPartitionsStructure->partitions[part].partitionType = PRIVATE;
@@ -511,7 +511,7 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, const uint3
               break;
             }
             newPartitionsStructure->partitions[part].lastSector = newPartitionsStructure->partitions[part]
-								.startSector + newPartitionsStructure->partitions[part].sectorNumber - 1;
+                .startSector + newPartitionsStructure->partitions[part].sectorNumber - 1;
             if (scrollToLineEnd(buff, bytesRead, &start) != 0) {
               break;
             }
@@ -532,7 +532,7 @@ uint8_t parseRootConfig(const char *buff, const uint32_t *bytesRead, const uint3
 /*******************************************************************************
 * Description    : Executes user command SHOW_ROOT_CONFIGURATIONS.
 * Input          : fileName - name of the file that will contain the device configurations
-* 								 partitionsStructure - the device configurations.
+*                  partitionsStructure - the device configurations.
 * Output         : None.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
@@ -544,7 +544,7 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
   if ((res == FR_OK) && (USBD_Stop(&hUsbDeviceFS) == USBD_OK)) {
     formConfFileText(&configFile, partitionsStructure);
     f_close(&configFile);
-    HAL_Delay(2000);            // Time delay for host to recognize detachment of the stick
+    HAL_Delay(2000);                                      // Time delay for host to recognize detachment of the stick
     res = USBD_Start(&hUsbDeviceFS);
   }
   return res;
@@ -553,7 +553,7 @@ uint8_t doShowConfig(const char *fileName, const PartitionsStructure *partitions
 /*******************************************************************************
 * Description    : Forms file that contains current device configurations
 * Input          : fil - file that will contains configurations
-* 								 partitionsStructure - the device configurations.
+*                  partitionsStructure - the device configurations.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
@@ -587,8 +587,8 @@ void formConfFileText(FIL *fil, const PartitionsStructure *partitionsStructure) 
 /*******************************************************************************
 * Description    : Detects and of the line. Works with Windows and Unix line separators
 * Input          : buff - the file data
-* 								 position - the position to check end of the line
-* 								 size - thw file size.
+*                  position - the position to check end of the line
+*                  size - thw file size.
 * Output         : None.
 * Return         : 0 if success or 1 if not.
 *******************************************************************************/
@@ -607,8 +607,8 @@ int8_t isNewLineOrEnd(const char *buff, const uint32_t *position, const uint32_t
 /*******************************************************************************
 * Description    : Check the command file update status.
 * Input          : fno - information of the file
-* 								 fileName - name of the file
-* 								 lastModifTime - last time when the command file was updated.
+*                  fileName - name of the file
+*                  lastModifTime - last time when the command file was updated.
 * Output         : None.
 * Return         : Return true if the command file was updated.
 *******************************************************************************/
@@ -623,12 +623,12 @@ uint8_t isCommandFileUpdated(const FILINFO *fno, const char *fileName, const WOR
 * Return         : None.
 *******************************************************************************/
 void commandExecutionResult(uint8_t res) {
-	if (res == 0) {
-#if	DEBUG_MOD == 0																	// If the operation was successful command file will be deleted
-		f_unlink(COMMAND_FILE_NAME);
+  if (res == 0) {
+#if  DEBUG_MOD == 0                                  // If the operation was successful command file will be deleted
+    f_unlink(COMMAND_FILE_NAME);
 #endif
-	} else {																					// If the operation was not successful command file will be renamed
-		f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
-	}
+  } else {                                           // If the operation was not successful command file will be renamed
+    f_rename(COMMAND_FILE_NAME, COMMAND_FILE_NAME_FAILED);
+  }
 }
 

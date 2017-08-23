@@ -44,16 +44,16 @@
 #define STORAGE_BLOCK_SIZE               512
 #define STORAGE_LUN_NBR                  0  
 
-#define ECB 														 1							// Enable both ECB
-																												// Define length of AES encryption key
+#define ECB                              1              // Enable both ECB
+                                                        // Define length of AES encryption key
 #if defined AES128
-	#define AES_KEY_SIZE									 16
+  #define AES_KEY_SIZE                   16
 #elif defined AES192
-	#define AES_KEY_SIZE									 24
+  #define AES_KEY_SIZE                   24
 #elif defined AES256
-	#define AES_KEY_SIZE									 32
+  #define AES_KEY_SIZE                   32
 #else
-	#define AES_KEY_SIZE									 -1
+  #define AES_KEY_SIZE                   -1
 #endif
 
 /* Disk Status Bits (DSTATUS) */
@@ -63,8 +63,8 @@
 #define STA_PROTECT   0x04  /* Write protected */
 
 /* Private variables ---------------------------------------------------------*/
-PartitionsStructure partitionsStructure;									// Contains current device configurations
-char longPartXORkey[STORAGE_BLOCK_SIZE];									// The password key for XOR cipher
+PartitionsStructure partitionsStructure;                  // Contains current device configurations
+char longPartXORkey[STORAGE_BLOCK_SIZE];                  // The password key for XOR cipher
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
@@ -149,10 +149,10 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count) {
     && (BSP_SD_ReadBlocks_DMA((uint32_t*) buff, 
           (uint64_t) (shiftedSector * STORAGE_BLOCK_SIZE), 
           STORAGE_BLOCK_SIZE, count * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK)) {
-#if	CIPHER_MOD == 0
-  	if (getPartition()->partitionType == PRIVATE) {
-  		decryptMemory(buff, longPartXORkey, count * SDCardInfo.CardBlockSize);
-  	}
+#if  CIPHER_MOD == 0
+    if (getPartition()->partitionType == PRIVATE) {
+      decryptMemory(buff, longPartXORkey, count * SDCardInfo.CardBlockSize);
+    }
 #endif
     res = RES_OK;
   }
@@ -173,9 +173,9 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count) {
   DRESULT res = RES_ERROR;
   
   DWORD shiftedSector = getPartitionSector(sector);
-#if	CIPHER_MOD == 0
+#if  CIPHER_MOD == 0
   if (getPartition()->partitionType == PRIVATE) {
-  	encryptMemory((BYTE*) buff, longPartXORkey, count * SDCardInfo.CardBlockSize);
+    encryptMemory((BYTE*) buff, longPartXORkey, count * SDCardInfo.CardBlockSize);
   }
 #endif
   if (isPartitionContainsMemorySectors(shiftedSector, count)
@@ -202,7 +202,7 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff) {
   DRESULT res = RES_ERROR;
   //SD_status(0);
   if (Stat & STA_NOINIT) {
-  	return RES_NOTRDY;
+    return RES_NOTRDY;
   }
   
   switch (cmd) {
@@ -242,24 +242,24 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff) {
 * Description    : Gets capacity of currently visible partition.
 * Input          : None.
 * Output         : block_num - number of the memory blocks
-* 								 block_size - size of the memory block.
+*                  block_size - size of the memory block.
 * Return         : 0 if success or error code.
 *******************************************************************************/
 int8_t currentPartitionCapacity(uint32_t *block_num, uint16_t *block_size) {
-	resetTimerInerrupt();
+  resetTimerInerrupt();
   *block_size = STORAGE_BLOCK_SIZE;
   if (partitionsStructure.initializeStatus == INITIALIZED) {
-  	*block_num = getPartition()->sectorNumber;
-  } else {																														// If the configurations not initialized
-  	 FATFS *fs;
-  	 DWORD fre_clust;
-  	 if (f_getfree((TCHAR const*)SD_Path, &fre_clust, &fs) == FR_OK) {
-  		 *block_num = (fs->n_fatent - 2) * fs->csize;				// Trying to get capacity by FatFs
-  		 getPartition()->sectorNumber = *block_num;
-  		 getPartition()->lastSector = *block_num - 1;
-  	 } else {
-  		 *block_num = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - 1;// Get capacity of SD card
-  	 }
+    *block_num = getPartition()->sectorNumber;
+  } else {                                                           // If the configurations not initialized
+     FATFS *fs;
+     DWORD fre_clust;
+     if (f_getfree((TCHAR const*)SD_Path, &fre_clust, &fs) == FR_OK) {
+       *block_num = (fs->n_fatent - 2) * fs->csize;                  // Trying to get capacity by FatFs
+       getPartition()->sectorNumber = *block_num;
+       getPartition()->lastSector = *block_num - 1;
+     } else {
+       *block_num = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - 1;// Get capacity of SD card
+     }
   }
   return USBD_OK;
 }
@@ -267,25 +267,25 @@ int8_t currentPartitionCapacity(uint32_t *block_num, uint16_t *block_size) {
 /*******************************************************************************
 * Description    : Reads data from the storage.
 * Input          : sector - start address of the memory
-* 								 count - number of the memory blocks to read.
+*                  count - number of the memory blocks to read.
 * Output         : buff - a part of the memory.
 * Return         : 0 if success or error code.
 *******************************************************************************/
 int8_t currentPartitionRead(BYTE *buff, DWORD sector, UINT count) {
-	resetTimerInerrupt();   																// Reset Timer for the command file scan
+  resetTimerInerrupt();                                              // Reset Timer for the command file scan
   return SD_read(STORAGE_LUN_NBR, buff, sector, count);
 }
 
 /*******************************************************************************
 * Description    : Writes data from the storage.
 * Input          : sector - start address of the memory
-* 								 count - number of the memory blocks to write
-* 								 buff - memory to write.
+*                  count - number of the memory blocks to write
+*                  buff - memory to write.
 * Output         : None.
 * Return         : 0 if success or error code.
 *******************************************************************************/
 int8_t currentPartitionWrite(BYTE *buff, DWORD sector, UINT count) {
-	resetTimerInerrupt();   																// Reset Timer for the command file scan
+  resetTimerInerrupt();                                            // Reset Timer for the command file scan
   return SD_write(STORAGE_LUN_NBR, buff, sector, count);
 }
 
@@ -296,7 +296,7 @@ int8_t currentPartitionWrite(BYTE *buff, DWORD sector, UINT count) {
 * Return         : 0.
 *******************************************************************************/
 int8_t currentPartitionInit(void) {
-	resetTimerInerrupt();   																// Reset Timer for the command file scan
+  resetTimerInerrupt();                                           // Reset Timer for the command file scan
   return USBD_OK;
 }
 
@@ -307,7 +307,7 @@ int8_t currentPartitionInit(void) {
 * Return         : 0.
 *******************************************************************************/
 int8_t currentPartitionisReady(void) {
-	resetTimerInerrupt();   																// Reset Timer for the command file scan
+  resetTimerInerrupt();                                          // Reset Timer for the command file scan
   return USBD_OK;
 }
 
@@ -318,7 +318,7 @@ int8_t currentPartitionisReady(void) {
 * Return         : 0.
 *******************************************************************************/
 int8_t currentPartitionIsWriteProtected(void) {
-	resetTimerInerrupt();   																// Reset Timer for the command file scan
+  resetTimerInerrupt();                                         // Reset Timer for the command file scan
   return USBD_OK;
 }
   
@@ -329,7 +329,7 @@ int8_t currentPartitionIsWriteProtected(void) {
 * Return         : 0.
 *******************************************************************************/
 int8_t currentPartitionMaxLun(void) {
-	resetTimerInerrupt();   																// Reset Timer for the command file scan
+  resetTimerInerrupt();                                        // Reset Timer for the command file scan
   return STORAGE_LUN_NBR;
 }
 //-------------------------------------------------------------------------------------------------
@@ -344,13 +344,13 @@ int8_t currentPartitionMaxLun(void) {
 DSTATUS initSDCard(void) {
   DSTATUS res = RES_ERROR;
   if (SD_initialize(STORAGE_LUN_NBR) == RES_OK) {
-  																									// Default configuration
-  	partitionsStructure.partitionsNumber = 1;
-		partitionsStructure.currPartitionNumber = 0;
-		strcpy(getPartition()->name, "partDefault");
-		getPartition()->startSector = 0x0;
-		getPartition()->lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - STORAGE_SECTOR_NUMBER - 2;
-		getPartition()->sectorNumber = getPartition()->lastSector + 1;
+                                                              // Default configuration
+    partitionsStructure.partitionsNumber = 1;
+    partitionsStructure.currPartitionNumber = 0;
+    strcpy(getPartition()->name, "partDefault");
+    getPartition()->startSector = 0x0;
+    getPartition()->lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE - STORAGE_SECTOR_NUMBER - 2;
+    getPartition()->sectorNumber = getPartition()->lastSector + 1;
     res = RES_OK;
   }
   return res;
@@ -359,7 +359,7 @@ DSTATUS initSDCard(void) {
 /*******************************************************************************
 * Description    : Switch current visible partition to another.
 * Input          : partName - name of the partition that will set to be visible
-* 								 partKey - the partition key.
+*                  partKey - the partition key.
 * Output         : None.
 * Return         : 0 id success or 1 if not.
 *******************************************************************************/
@@ -367,10 +367,10 @@ uint8_t changePartition(const char *partName, const char *partKey) {
   uint8_t res = 1;
   for (uint8_t partNmb = 0; partNmb < partitionsStructure.partitionsNumber; ++partNmb) {
     if ((strncmp(partName, partitionsStructure.partitions[partNmb].name, PART_NAME_LENGHT) == 0)
-    		&& ((partitionsStructure.partitions[partNmb].partitionType == PUBLIC)
-    				|| (strncmp(partKey, partitionsStructure.partitions[partNmb].key, PART_KEY_LENGHT) == 0))) {
+        && ((partitionsStructure.partitions[partNmb].partitionType == PUBLIC)
+            || (strncmp(partKey, partitionsStructure.partitions[partNmb].key, PART_KEY_LENGHT) == 0))) {
       partitionsStructure.currPartitionNumber = partNmb;
-#if	CIPHER_MOD == 0
+#if  CIPHER_MOD == 0
       createKeyWithSpecLength(getPartition()->key, longPartXORkey, STORAGE_BLOCK_SIZE);
 #endif
       res = 0;
@@ -383,7 +383,7 @@ uint8_t changePartition(const char *partName, const char *partKey) {
 /*******************************************************************************
 * Description    : Sets new configurations to the device configuration.
 * Input          : oldConf - name of the device configuration structure
-* 								 newConf - name of the new configuration for the device.
+*                  newConf - name of the new configuration for the device.
 * Output         : None.
 * Return         : 0 id success or 1 if not.
 *******************************************************************************/
@@ -411,7 +411,7 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
   uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
   BYTE alignMemory[memorySize];
   memcpy(alignMemory, partitionsStructure, sizeof(*partitionsStructure));
-#if	CIPHER_MOD == 0
+#if  CIPHER_MOD == 0
   encryptMemoryAES(alignMemory, partitionsStructure->rootKey, memorySize);
 #endif
   
@@ -430,7 +430,7 @@ uint8_t saveConf(const PartitionsStructure *partitionsStructure) {
 * Return         : 0 id success or 1 if not.
 *******************************************************************************/
 uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) {
-	PartitionsStructure newConfStructure;
+  PartitionsStructure newConfStructure;
   uint8_t res = 1;
   uint32_t memorySize = STORAGE_BLOCK_SIZE * STORAGE_SECTOR_NUMBER;
   uint64_t storageAddr = SDCardInfo.CardCapacity - STORAGE_SECTOR_NUMBER * STORAGE_BLOCK_SIZE;
@@ -438,8 +438,8 @@ uint8_t loadConf(PartitionsStructure *partitionsStructure, const char *rootKey) 
   
   if (BSP_SD_ReadBlocks_DMA((uint32_t*) alignMemory, storageAddr, 
       STORAGE_BLOCK_SIZE, STORAGE_SECTOR_NUMBER * SDCardInfo.CardBlockSize / STORAGE_BLOCK_SIZE) == MSD_OK) {
-#if	CIPHER_MOD == 0
-  	decryptMemoryAES(alignMemory, rootKey, memorySize);
+#if  CIPHER_MOD == 0
+    decryptMemoryAES(alignMemory, rootKey, memorySize);
 #endif
     memcpy((void*) &newConfStructure, alignMemory, sizeof(newConfStructure));
     // Check data correctness
@@ -468,7 +468,7 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
       || (partitionStructure->partitions[i].key[0] == '\0')
       || ((partitionStructure->partitions[i].partitionType == PUBLIC)
           && (strncmp(partitionStructure->partitions[i].key,
-          		PUBLIC_PARTITION_KEY, PART_KEY_LENGHT) != 0))
+              PUBLIC_PARTITION_KEY, PART_KEY_LENGHT) != 0))
       || (partitionStructure->partitions[i].lastSector != partitionStructure->partitions[i].startSector 
           + partitionStructure->partitions[i].sectorNumber - 1)) {
             return 1;
@@ -488,30 +488,30 @@ uint8_t checkNewPartitionsStructure(const PartitionsStructure *partitionStructur
 * Return         : 0 id success or 1 if not.
 *******************************************************************************/
 uint8_t initStartConf() {
-	partitionsStructure.partitionsNumber = 2;
-	partitionsStructure.currPartitionNumber = 0;
-	strcpy(partitionsStructure.partitions[0].name, "part0");
-	partitionsStructure.partitions[0].startSector = 0x0;
-	partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
-	partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector + 1;
-	partitionsStructure.partitions[0].partitionType = PUBLIC;
+  partitionsStructure.partitionsNumber = 2;
+  partitionsStructure.currPartitionNumber = 0;
+  strcpy(partitionsStructure.partitions[0].name, "part0");
+  partitionsStructure.partitions[0].startSector = 0x0;
+  partitionsStructure.partitions[0].lastSector = (SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE) / 2;
+  partitionsStructure.partitions[0].sectorNumber = partitionsStructure.partitions[0].lastSector + 1;
+  partitionsStructure.partitions[0].partitionType = PUBLIC;
 
-	memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
-	memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
-	strcpy(partitionsStructure.partitions[1].name, "part1");
-	strcpy(partitionsStructure.partitions[1].key, "part1Key");
-	partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
-	partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE
-			- STORAGE_SECTOR_NUMBER - 1;
-	partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector
-			- partitionsStructure.partitions[1].startSector + 1;
-	partitionsStructure.partitions[1].partitionType = PRIVATE;
+  memset(partitionsStructure.partitions[1].name, '\0', sizeof(partitionsStructure.partitions[1].name));
+  memset(partitionsStructure.partitions[1].key, '\0', sizeof(partitionsStructure.partitions[1].key));
+  strcpy(partitionsStructure.partitions[1].name, "part1");
+  strcpy(partitionsStructure.partitions[1].key, "part1Key");
+  partitionsStructure.partitions[1].startSector = partitionsStructure.partitions[0].lastSector + 1;
+  partitionsStructure.partitions[1].lastSector = SDCardInfo.CardCapacity / STORAGE_BLOCK_SIZE
+      - STORAGE_SECTOR_NUMBER - 1;
+  partitionsStructure.partitions[1].sectorNumber = partitionsStructure.partitions[1].lastSector
+      - partitionsStructure.partitions[1].startSector + 1;
+  partitionsStructure.partitions[1].partitionType = PRIVATE;
 
-	strcpy(partitionsStructure.confKey, "confKey");
-	strcpy(partitionsStructure.rootKey, "rootKey");
+  strcpy(partitionsStructure.confKey, "confKey");
+  strcpy(partitionsStructure.rootKey, "rootKey");
 
-	partitionsStructure.initializeStatus = INITIALIZED;
-	return saveConf(&partitionsStructure);
+  partitionsStructure.initializeStatus = INITIALIZED;
+  return saveConf(&partitionsStructure);
 }
 
 /*******************************************************************************
@@ -527,12 +527,12 @@ DWORD getPartitionSector(DWORD sector) {
 /*******************************************************************************
 * Description    : Checks desired memory to be in the currently visible partition.
 * Input          : shiftedSector - start sector of the desired memory
-* 								 count - number of memory blocks.
+*                  count - number of memory blocks.
 * Output         : None.
 * Return         : True if requested sector contains in current visible partition.
 *******************************************************************************/
 uint8_t isPartitionContainsMemorySectors(DWORD shiftedSector, UINT count) {
-	shiftedSector += count;
+  shiftedSector += count;
   return (shiftedSector >= getPartition()->startSector) && (shiftedSector <= getPartition()->lastSector) ? 1 : 0;
 }
 
@@ -549,101 +549,101 @@ Partition* getPartition() {
 /*******************************************************************************
 * Description    : Decrypt memory block encrypted by AES cipher.
 * Input          : buff - data to decrypt
-* 								 key - decryption key
-* 								 size - size of the buffer.
+*                  key - decryption key
+*                  size - size of the buffer.
 * Output         : buff - decrypted data.
 * Return         : None.
 *******************************************************************************/
 void decryptMemoryAES(BYTE *buff, const char *key, const uint32_t size) {
-	char keyP[AES_KEY_SIZE];
-	BYTE buf[AES_KEY_SIZE];
+  char keyP[AES_KEY_SIZE];
+  BYTE buf[AES_KEY_SIZE];
 
-	createKeyWithSpecLength(key, keyP, AES_KEY_SIZE);
+  createKeyWithSpecLength(key, keyP, AES_KEY_SIZE);
 
-	for(uint32_t i = 0; i < size / AES_KEY_SIZE; ++i) {
-			memset(buf, 0, AES_KEY_SIZE);
-			AES_ECB_decrypt(buff + (i * AES_KEY_SIZE), (uint8_t*) keyP, buf, AES_KEY_SIZE);
-			memcpy(buff + (i * AES_KEY_SIZE), buf, AES_KEY_SIZE);
-	}
+  for(uint32_t i = 0; i < size / AES_KEY_SIZE; ++i) {
+      memset(buf, 0, AES_KEY_SIZE);
+      AES_ECB_decrypt(buff + (i * AES_KEY_SIZE), (uint8_t*) keyP, buf, AES_KEY_SIZE);
+      memcpy(buff + (i * AES_KEY_SIZE), buf, AES_KEY_SIZE);
+  }
 }
 
 /*******************************************************************************
 * Description    : Encrypt memory block with AES cipher.
 * Input          : buff - data to encrypt
-* 								 key - encryption key
-* 								 size - size of the buffer.
+*                  key - encryption key
+*                  size - size of the buffer.
 * Output         : buff - encrypted data.
 * Return         : None.
 *******************************************************************************/
 void encryptMemoryAES(BYTE *buff, const char *key, const uint32_t size) {
-	char keyP[AES_KEY_SIZE];
-	BYTE buf[AES_KEY_SIZE];
+  char keyP[AES_KEY_SIZE];
+  BYTE buf[AES_KEY_SIZE];
 
-	createKeyWithSpecLength(key, keyP, AES_KEY_SIZE);
+  createKeyWithSpecLength(key, keyP, AES_KEY_SIZE);
 
-	for(uint32_t i = 0; i < size / AES_KEY_SIZE; ++i) {
-			memset(buf, 0, AES_KEY_SIZE);
-			AES_ECB_encrypt(buff + (i * AES_KEY_SIZE), (uint8_t*) keyP, buf, AES_KEY_SIZE);
-			memcpy(buff + (i * AES_KEY_SIZE), buf, AES_KEY_SIZE);
-	}
+  for(uint32_t i = 0; i < size / AES_KEY_SIZE; ++i) {
+      memset(buf, 0, AES_KEY_SIZE);
+      AES_ECB_encrypt(buff + (i * AES_KEY_SIZE), (uint8_t*) keyP, buf, AES_KEY_SIZE);
+      memcpy(buff + (i * AES_KEY_SIZE), buf, AES_KEY_SIZE);
+  }
 }
 
 /*******************************************************************************
 * Description    : Creates key with specific length
-* 									The algorithm of forming new key should be more complicated to provide additional protection.
+*                   The algorithm of forming new key should be more complicated to provide additional protection.
 * Input          : keyIn - base key that use to form new key
-* 								 keyOutLength - desired key length.
+*                  keyOutLength - desired key length.
 * Output         : keyOut - key with specific length.
 * Return         : None.
 *******************************************************************************/
 void createKeyWithSpecLength(const char *keyIn, char *keyOut, const uint16_t keyOutLength) {
-	uint8_t keyInLength = strlen(keyIn);
-	if (keyInLength == 0) {
-		memset(keyOut, '\0', keyOutLength);
-		return;
-	}
-	for (uint16_t i = 0; i < keyOutLength; ++i) {
-		keyOut[i] = keyIn[i % keyInLength];
-	}
+  uint8_t keyInLength = strlen(keyIn);
+  if (keyInLength == 0) {
+    memset(keyOut, '\0', keyOutLength);
+    return;
+  }
+  for (uint16_t i = 0; i < keyOutLength; ++i) {
+    keyOut[i] = keyIn[i % keyInLength];
+  }
 }
 
 /*******************************************************************************
 * Description    : Decrypt memory block for USB interface
 * Input          : buff - data to decrypt
-* 								 key - decryption key
-* 								 size - size of the buffer.
+*                  key - decryption key
+*                  size - size of the buffer.
 * Output         : buff - decrypted data.
 * Return         : None.
 *******************************************************************************/
 void decryptMemory(BYTE *buff, const char *key, const uint32_t size) {
-	cipherXOR(buff, key, size);
+  cipherXOR(buff, key, size);
 }
 
 /*******************************************************************************
 * Description    : Encrypt memory block for USB interface
 * Input          : buff - data to encrypt
-* 								 key - encryption key
-* 								 size - size of the buffer.
+*                  key - encryption key
+*                  size - size of the buffer.
 * Output         : buff - encrypted data.
 * Return         : None.
 *******************************************************************************/
 void encryptMemory(BYTE *buff, const char *key, const uint32_t size) {
-	cipherXOR(buff, key, size);
+  cipherXOR(buff, key, size);
 }
 
 /*******************************************************************************
 * Description    : XOR cipher
 * Input          : buff - data to encrypt/decrypt
-* 								 key - encryption/decryption key
-* 								 size - size of the buffer.
+*                  key - encryption/decryption key
+*                  size - size of the buffer.
 * Output         : buff - encrypted/decrypted data.
 * Return         : None.
 *******************************************************************************/
 void cipherXOR(BYTE *buff, const char *key, const uint32_t size) {
-	uint16_t keyLength = strlen(key) / 4;
-	for (uint32_t i = 0; i < size / 4; ++i) {
-			((int32_t*) buff)[i] ^= ((int32_t *) key)[i % keyLength];
-	}
+  uint16_t keyLength = strlen(key) / 4;
+  for (uint32_t i = 0; i < size / 4; ++i) {
+      ((int32_t*) buff)[i] ^= ((int32_t *) key)[i % keyLength];
+  }
 }
 
 /*******************************************************************************
@@ -653,7 +653,7 @@ void cipherXOR(BYTE *buff, const char *key, const uint32_t size) {
 * Return         : None.
 *******************************************************************************/
 void resetTimerInerrupt(void) {
-	htim14.Instance->CNT = 0;
+  htim14.Instance->CNT = 0;
 }
 #endif /* _USE_IOCTL == 1 */
 
