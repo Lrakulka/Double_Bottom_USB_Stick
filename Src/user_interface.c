@@ -141,6 +141,7 @@ void checkConfFiles() {
   }  
   if (res == FR_OK) {
     isPartitionScanned = 1;                             // Partition scanned
+    commandExecutionResult(0);
   } else {
     isPartitionScanned = 0;                             // Try to reinit file system and try to scan again
   }
