@@ -14,6 +14,8 @@ Organization: Portland State University
 Mentor: Keith Packard
 
 The last commit during GSoC program .... Tag   ....
+
+Most of the work was done in the files sd_io_controller.\* and user_interface.\*
 # Project Brief
 The main goal of the project is the creation of USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders and files will not be displayed if the USB drive is connected to computer. The microcontroller of the Double Bottom USB Stick will carry the process of encryption and concealment of files and folders. 
 
@@ -57,6 +59,7 @@ Create in the root directory of the device a file with name ```COMMAND_.TXT - CO
 ```
 InitConf
 [Device Unique ID - DEVICE_UNIQUE_ID]
+// Empty line
 ```
 If device ID is correct then the command file will be deleted and the device will reconnect to the host, if ID or command not correct no action will be executed.
 
@@ -66,6 +69,7 @@ Create in the root directory of the device a file with name ```COMMAND_.TXT - CO
 ChangePart
 [Device root key]
 [Partition name] [Partition key]
+// Empty line
 ```
 If root key, partition key and partition name are correct then the command file will be deleted and the device will reconnect to the host and switch the currently visible partition. If root key not correct no action will be executed. If the partition name or key is incorrect then the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT``` (If the partition is public then You should write "public" as partition key).
 
@@ -75,6 +79,7 @@ Create in the root directory of the device a file with name ```COMMAND_.TXT - CO
 ShowConf
 [Device root key]
 [Configurations key]
+// Empty line
 ```
 If device root key and configuration key are correct then the command file will be deleted and the device will reconnect to the host and will create a file ```DEVICE_CONFIGS - CONFIGS_.TXT``` with the device configurations. If the root key or configuration key is not correct then no action will be executed.
 
@@ -96,12 +101,14 @@ UpdateConf
 3965190144          <- Card capacity memory	
 512                 <- Card block size	
 7744510             <- Card block sector number	
+// Empty line
 ```
 Note: if write "public" as [New partition key] the partition will be public. Also you can delete partitions as well (Just delete it from the update configuration file).
 
 If device root key and configuration key are correct the command file will be deleted and the device will reconnect to the host and the device configurations will be updated, also the currently visible partition will be switched to partition 0. If the root key or configuration key is not correct then no action will be executed. If update operation fails with error the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
 
-Note: Any commands that failed with error during execution will rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+Note 1: Any commands that failed with error during execution will rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+Note 2: The project has constants that created for debug mode ```DEBUG_MOD``` and ```CIPHER_MOD```(Constans changes behavior of the device)
 # Future Improvements
 At this moment each partition part of SD Card memory is allocated as a solid piece. This approach would be acceptable if the project used for the partition encryption AES but due to its performance cost the device uses XOR cipher. That is why the spreading memory of the each partition across the SD Card memory will increase the level of data protection. Also, the logic for the forming XOR long key must be more complex to increase XOR cipher reliability.
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Future_Device_Memory_Allocation.png)
