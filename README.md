@@ -22,7 +22,7 @@ The main goal of the project is the creation of USB Flash Drive with the possibi
 The only possibility to break protection is physically read a memory from the memory component and breaking the encryption algorithm.
 
 # Demonstration Video
-[![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Video.png)](https://youtu.be/uqf0pSannQU);
+[![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Video.png)](https://youtu.be/ZjI67Ov26jA);
 
 # Project Technologies And Hardware
 * Test board is NUCLEO [STM32F446RE](https://developer.mbed.org/platforms/ST-Nucleo-F446RE/);
