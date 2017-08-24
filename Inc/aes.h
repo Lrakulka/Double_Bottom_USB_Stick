@@ -1,3 +1,4 @@
+/*
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -24,6 +25,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 
 Source: https://github.com/kokke/tiny-AES-c
+*/
 #ifndef _AES_H_
 #define _AES_H_
 
