@@ -13,8 +13,6 @@ Organization: Portland State University
 
 Mentor: Keith Packard
 
-The last commit during GSoC program .... Tag   ....
-
 Most of the work was done in the files sd_io_controller.\* and user_interface.\*
 # Project Brief
 The main goal of the project is the creation of USB Flash Drive with the possibility to conceal the fact that the flash drive contains hidden information. It means that hidden folders and files will not be displayed if the USB drive is connected to computer. The microcontroller of the Double Bottom USB Stick will carry the process of encryption and concealment of files and folders. 
@@ -23,6 +21,20 @@ The only possibility to break protection is physically read a memory from the me
 
 # Demonstration Video
 [![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Video.png)](https://youtu.be/ZjI67Ov26jA);
+
+# Installation Instruction
+1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
+2) Download and install [TRUEStudio](https://atollic.com/truestudio/);
+3) Download and install [STM32CubeMX v4.18](https://community.st.com/thread/39835-please-provide-a-way-to-download-older-version-of-the-cube);
+3) Clone the project or download zip file;
+4) Open CubeMX project file ```Double_Bottom_USB_Stick.ioc```;
+5) Generate STM source code (Button with Gear);
+6) Open the project in the command prompt;
+7) Execute command: ```git apply --reject --whitespace=fix Patch-for-STM-files.patch```;
+8) Delete the directory ```Double_Bottom_USB_Stick\Middlewares\Third_Party\FatFs\src\drivers``` in the project;
+9) Open TRUEStudio. Select File -> Import... -> General -> Existing Project into Workspace -> Press "Next >" button -> Browse to the project folder -> Select "Double_Bottom_USB_Stick" in the Project window -> Press "Finish";
+10) Connect  the board to the PC;
+11) Select in the project explorer one of the project's files and press "Debug" (Button with Green bug)
 
 # Project Technologies And Hardware
 * Test board is NUCLEO [STM32F446RE](https://developer.mbed.org/platforms/ST-Nucleo-F446RE/);
@@ -34,14 +46,7 @@ The only possibility to break protection is physically read a memory from the me
 * Dependiaces: SDIO intarface, FS USB 2.0 Mass Storage Device intaface, [FatFS](http://elm-chan.org/fsw/ff/00index_e.html)
 # Board Schematic
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Sketch_bb-min.png)
-# Getting Started
-1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
-2) Download and install [TRUEStudio](https://atollic.com/truestudio/);
-3) Clone the project or download zip file;
-4) Open TRUEStudio. Select File -> Import... -> General -> Existing Project into Workspace -> Press "Next >" button -> Browse to the project folder -> Select "Double_Bottom_USB_Stick" in the Project window -> Press "Finish";
-5) Connect to the PC the board;
-6) Select in the studio one of the project's files and press "Debug" (Green bug)
-7) Optional. Install [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html) and open Cube project [Double_Bottom_USB_Stick.ioc](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/Double_Bottom_USB_Stick.ioc) with the project configurations.
+
 # How It Works
 The logic behind the device is to represent a part of SD Card memory as the solid memory of the device (Double Bottom USB Stick).
 The project present itself as regular USB Mass Storage Device (USB 2.0 Stick) and currently visible partition memory represents as USB Stick memory to the host. Zero partition is always public because this partition displays when the device physically connected to the host. Also, this partition will be demonstrated to the user if connect SD Card without the device to the host. The partitions divided into two categories: public and private. The private partitions are encrypted/decrypted by XOR cipher on the fly using the partition key. 
