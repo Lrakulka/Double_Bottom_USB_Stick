@@ -26,15 +26,15 @@ The only possibility to break protection is physically read a memory from the me
 1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
 2) Download and install [TRUEStudio](https://atollic.com/truestudio/);
 3) Download and install [STM32CubeMX v4.18](https://community.st.com/thread/39835-please-provide-a-way-to-download-older-version-of-the-cube);
-3) Clone the project or download zip file;
-4) Open CubeMX project file ```Double_Bottom_USB_Stick.ioc```;
-5) Generate STM source code (Button with Gear);
-6) Open the project in the command prompt;
-7) Execute command: ```git apply --reject --whitespace=fix Patch-for-STM-files.patch```;
-8) Delete the directory ```Double_Bottom_USB_Stick\Middlewares\Third_Party\FatFs\src\drivers``` in the project;
-9) Open TRUEStudio. Select File -> Import... -> General -> Existing Project into Workspace -> Press "Next >" button -> Browse to the project folder -> Select "Double_Bottom_USB_Stick" in the Project window -> Press "Finish";
-10) Connect  the board to the PC;
-11) Select in the project explorer one of the project's files and press "Debug" (Button with Green bug)
+4) Clone the project or download zip file;
+5) Open CubeMX project file ```Double_Bottom_USB_Stick.ioc```;
+6) Generate STM source code (Button with Gear);
+7) Open the project in the command prompt;
+8) Execute command: ```git apply --reject --whitespace=fix Patch-for-STM-files.patch```;
+9) Delete the directory ```Double_Bottom_USB_Stick\Middlewares\Third_Party\FatFs\src\drivers``` in the project;
+10) Open TRUEStudio. Select File -> Import... -> General -> Existing Project into Workspace -> Press "Next >" button -> Browse to the project folder -> Select "Double_Bottom_USB_Stick" in the Project window -> Press "Finish";
+11) Connect  the board to the PC;
+12) Select in the project explorer one of the project's files and press "Debug" (Button with Green bug)
 
 # Project Technologies And Hardware
 * Test board is NUCLEO [STM32F446RE](https://developer.mbed.org/platforms/ST-Nucleo-F446RE/);
