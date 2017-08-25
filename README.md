@@ -20,7 +20,7 @@ The main goal of the project is the creation of USB Flash Drive with the possibi
 The only possibility to break protection is physically read a memory from the memory component and breaking the encryption algorithm.
 
 # Demonstration Video
-[![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Video.png)](https://youtu.be/ZjI67Ov26jA);
+[![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Double_Bottom_USB_Stick_Video.png)](https://youtu.be/NDC2jo4gk50);
 
 # Installation Instruction
 1) Download and install [ST-Link](http://www.st.com/content/st_com/en/products/embedded-software/development-tool-software/stsw-link009.html);
