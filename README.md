@@ -60,7 +60,7 @@ Currently, the device supports four commands:
 * Updates device configurations (```UpdateConf - UPDATE_ROOT_CONFIGURATIONS```)
 
 ### InitConf ###
-Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+Create a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` in the root directory of the device and fill it with the following text.
 ```
 InitConf
 [Device Unique ID - DEVICE_UNIQUE_ID]
@@ -69,7 +69,7 @@ InitConf
 If device ID is correct then the command file will be deleted and the device will reconnect to the host, if ID or command not correct no action will be executed.
 
 ### ChangePart ###
-Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+Create a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` in the root directory of the device and fill it with the following text.
 ```
 ChangePart
 [Device root key]
@@ -79,7 +79,7 @@ ChangePart
 If root key, partition key and partition name are correct then the command file will be deleted and the device will reconnect to the host and switch the currently visible partition. If root key not correct no action will be executed. If the partition name or key is incorrect then the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT``` (If the partition is public then You should write "public" as partition key).
 
 ### ShowConf ###
-Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+Create a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` in the root directory of the device and fill it with the following text.
 ```
 ShowConf
 [Device root key]
@@ -89,7 +89,7 @@ ShowConf
 If device root key and configuration key are correct then the command file will be deleted and the device will reconnect to the host and will create a file ```DEVICE_CONFIGS - CONFIGS_.TXT``` with the device configurations. If the root key or configuration key is not correct then no action will be executed.
 
 ### UpdateConf ###
-Create in the root directory of the device a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` and fill it with the following text.
+Create a file with name ```COMMAND_.TXT - COMMAND_FILE_NAME``` in the root directory of the device and fill it with the following text.
 ```
 UpdateConf
 [Device root key]
@@ -112,10 +112,10 @@ Note: if write "public" as [New partition key] the partition will be public. Als
 
 If device root key and configuration key are correct the command file will be deleted and the device will reconnect to the host and the device configurations will be updated, also the currently visible partition will be switched to partition 0. If the root key or configuration key is not correct then no action will be executed. If update operation fails with error the command file will be renamed to ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
 
-Note 1: Any commands that failed with error during execution will rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
-Note 2: The project has constants that created for debug mode ```DEBUG_MOD``` and ```CIPHER_MOD```(Constans changes behavior of the device)
+Note 1: Any commands that failed with an error during execution will rename the command file to  ```COMMAND_FILE_NAME_FAILED - COMMANDF.TXT```.
+Note 2: The project has constants that created for debug mode ```DEBUG_MOD``` and ```CIPHER_MOD```(Constans change behavior of the device)
 # Future Improvements
-At this moment each partition part of SD Card memory is allocated as a solid piece. This approach would be acceptable if the project used for the partition encryption AES but due to its performance cost the device uses XOR cipher. That is why the spreading memory of the each partition across the SD Card memory will increase the level of data protection. Also, the logic for the forming XOR long key must be more complex to increase XOR cipher reliability.
+At this moment each partition part of SD Card memory is allocated as a solid piece. This approach would be acceptable if the project used AES encryption for the partition but due to its performance costs the device uses XOR cipher. That is why spreading the memory of each partition across the SD Card memory will increase the level of data protection. Also, the logic BEHIND forming long XOR key must be more complex to increase XOR cipher reliability.
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Future_Device_Memory_Allocation.png)
 # My Test Board
 ![](https://github.com/Lrakulka/Double_Bottom_USB_Stick/blob/master/info/Project_Assembled.jpg)
